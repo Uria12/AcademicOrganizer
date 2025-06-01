@@ -1,70 +1,46 @@
-# -----------------------------
-# Node.js & package dependencies
-# -----------------------------
-node_modules/
+# Node modules (both frontend and backend)
+**/node_modules/
 
-# -----------------------------
 # Build outputs
-# -----------------------------
 frontend/build/
 backend/dist/
 backend/build/
 
-# -----------------------------
 # Environment files
-# -----------------------------
 .env
 .env.*
 !.env.example
 
-# -----------------------------
-# Logs
-# -----------------------------
+# Logs and databases
 *.log
 logs/
-
-# -----------------------------
-# Databases
-# -----------------------------
 *.sqlite
 *.db
 *.sqlite3
 *.bak
 *.backup
 
-# -----------------------------
-# Runtime + PIDs
-# -----------------------------
+# Runtime files
 *.pid
 *.pid.lock
 
-# -----------------------------
-# Coverage
-# -----------------------------
+# Coverage reports
 coverage/
 *.lcov
 
-# -----------------------------
-# Editor and OS trash
-# -----------------------------
+# Editor and OS files
 .vscode/
 .idea/
 .DS_Store
 *.swp
 *~
 
-# -----------------------------
-# Prisma
-# -----------------------------
+# Prisma database
 backend/prisma/dev.db*
 
-# -----------------------------
 # Temp files
-# -----------------------------
 tmp/
 temp/
 
-# -----------------------------
 # Docker overrides
-# -----------------------------
 docker-compose.override.yml
