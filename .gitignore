@@ -1,48 +1,67 @@
-# Dependencies
+# -----------------------------
+# Node and package dependencies
+# -----------------------------
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+*.tgz
+*.tar.gz
 
-# Production builds
+# -----------------------------
+# Build outputs (don’t push these)
+# -----------------------------
 /frontend/build/
 /backend/dist/
 /backend/build/
 
-# Environment variables
+# -----------------------------
+# Environment variables (sensitive)
+# -----------------------------
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
+!.env.example  # allow an example if you have one
 
-# Database
-*.db
-*.sqlite
-*.sqlite3
-
-# Logs
-logs
+# -----------------------------
+# Logs and debug output
+# -----------------------------
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 *.log
+logs/
 
-# Runtime data
-pids
+# -----------------------------
+# Databases
+# -----------------------------
+*.db
+*.sqlite*
+*.bak
+*.backup
+
+# -----------------------------
+# Runtime files
+# -----------------------------
 *.pid
-*.seed
 *.pid.lock
+*.seed
+pids/
 
-# Coverage directory used by tools like istanbul
+# -----------------------------
+# Code coverage
+# -----------------------------
 coverage/
 *.lcov
 
-# IDE files
+# -----------------------------
+# IDE/editor config files
+# -----------------------------
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# OS generated files
+# -----------------------------
+# OS-specific clutter
+# -----------------------------
 .DS_Store
 .DS_Store?
 ._*
@@ -51,24 +70,19 @@ coverage/
 ehthumbs.db
 Thumbs.db
 
-# Temporary folders
-tmp/
-temp/
-
+# -----------------------------
 # Prisma
-/backend/prisma/migrations/
+# -----------------------------
+# Ignore dev.db but allow migrations
 /backend/prisma/dev.db*
 
-# Testing
-/coverage
-
-# Misc
-*.tgz
-*.tar.gz
-
-# Docker
+# -----------------------------
+# Docker overrides
+# -----------------------------
 docker-compose.override.yml
 
-# Backup files
-*.backup
-*.bak
+# -----------------------------
+# Temp folders
+# -----------------------------
+tmp/
+temp/
