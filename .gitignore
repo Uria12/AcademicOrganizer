@@ -1,88 +1,70 @@
 # -----------------------------
-# Node and package dependencies
+# Node.js & package dependencies
 # -----------------------------
 node_modules/
-*.tgz
-*.tar.gz
 
 # -----------------------------
-# Build outputs (don’t push these)
+# Build outputs
 # -----------------------------
-/frontend/build/
-/backend/dist/
-/backend/build/
+frontend/build/
+backend/dist/
+backend/build/
 
 # -----------------------------
-# Environment variables (sensitive)
+# Environment files
 # -----------------------------
 .env
 .env.*
-!.env.example  # allow an example if you have one
+!.env.example
 
 # -----------------------------
-# Logs and debug output
+# Logs
 # -----------------------------
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 *.log
 logs/
 
 # -----------------------------
 # Databases
 # -----------------------------
+*.sqlite
 *.db
-*.sqlite*
+*.sqlite3
 *.bak
 *.backup
 
 # -----------------------------
-# Runtime files
+# Runtime + PIDs
 # -----------------------------
 *.pid
 *.pid.lock
-*.seed
-pids/
 
 # -----------------------------
-# Code coverage
+# Coverage
 # -----------------------------
 coverage/
 *.lcov
 
 # -----------------------------
-# IDE/editor config files
+# Editor and OS trash
 # -----------------------------
 .vscode/
 .idea/
-*.swp
-*.swo
-*~
-
-# -----------------------------
-# OS-specific clutter
-# -----------------------------
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
+*.swp
+*~
 
 # -----------------------------
 # Prisma
 # -----------------------------
-# Ignore dev.db but allow migrations
-/backend/prisma/dev.db*
+backend/prisma/dev.db*
+
+# -----------------------------
+# Temp files
+# -----------------------------
+tmp/
+temp/
 
 # -----------------------------
 # Docker overrides
 # -----------------------------
 docker-compose.override.yml
-
-# -----------------------------
-# Temp folders
-# -----------------------------
-tmp/
-temp/
