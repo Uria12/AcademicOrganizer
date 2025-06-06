@@ -1,6 +1,3 @@
-// Prisma Schema for Academic Organizer
-// Database: PostgreSQL
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,44 +8,32 @@ datasource db {
 }
 
 model User {
-  id          String   @id @default(uuid())
-  email       String   @unique
-  passwordHash String  @map("password_hash")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-  
-  assignments Assignment[]
-  notes       Note[]
-  
-  @@map("users")
+  id            String        @id @default(uuid())
+  email         String        @unique
+  password      String
+  createdAt     DateTime      @default(now())
+  assignments   Assignment[]
+  notes         Note[]
 }
 
 model Assignment {
   id          String   @id @default(uuid())
-  userId      String   @map("user_id")
   title       String
-  deadline    DateTime @db.Date
   description String?
+  deadline    DateTime
   status      String   @default("pending")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-  
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@map("assignments")
+  createdAt   DateTime @default(now())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
 }
 
 model Note {
   id        String   @id @default(uuid())
-  userId    String   @map("user_id")
   title     String
   content   String
   link      String?
   tag       String?
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@map("notes")
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
 }
