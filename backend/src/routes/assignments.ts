@@ -20,7 +20,6 @@ router.post(
   validate(assignmentSchema),
   createAssignment
 );
-
 router.put('/:id', updateAssignment);
 router.delete('/:id', deleteAssignment);
 

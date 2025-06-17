@@ -9,7 +9,7 @@ CREATE TABLE "User" (
 );
 
 -- CreateTable
-CREATE TABLE "Assignment" (
+CREATE TABLE "assignments" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "description" TEXT,
@@ -22,7 +22,7 @@ CREATE TABLE "Assignment" (
 );
 
 -- CreateTable
-CREATE TABLE "Note" (
+CREATE TABLE "notes" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "content" TEXT NOT NULL,

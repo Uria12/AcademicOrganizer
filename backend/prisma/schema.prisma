@@ -8,12 +8,14 @@ datasource db {
 }
 
 model User {
-  id            String        @id @default(uuid())
-  email         String        @unique
-  password      String
-  createdAt     DateTime      @default(now())
-  assignments   Assignment[]
-  notes         Note[]
+  id          String        @id @default(uuid())
+  email       String        @unique
+  password    String
+  createdAt   DateTime      @default(now())
+  assignments Assignment[]
+  notes       Note[]
+
+  @@map("users") // 🔁 mapped to renamed table
 }
 
 model Assignment {
@@ -25,6 +27,8 @@ model Assignment {
   createdAt   DateTime @default(now())
   userId      String
   user        User     @relation(fields: [userId], references: [id])
+
+  @@map("assignments") // 🔁 mapped to renamed table
 }
 
 model Note {
@@ -36,4 +40,6 @@ model Note {
   createdAt DateTime @default(now())
   userId    String
   user      User     @relation(fields: [userId], references: [id])
+
+  @@map("notes") // 🔁 mapped to renamed table
 }
