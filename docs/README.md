@@ -198,8 +198,3 @@ This project is part of an academic assignment.
 - **Giorgi Uriatmkopeli** - [[[GitHub Profile]](https://github.com/Uria12)](https://github.com/Uria12)
 - **Dima Chubinidze** - [[GitHub Profile]](https://github.com/DimaCH2004)
 - **Beka Baratashvili** - [[GitHub Profile]](https://github.com/BekasGithub)
-
----
-
-**Project Status**: 🚧 In Development (Week 1 - Setup Phase)
-**Last Updated**: Week 1 - Repository Initial Structure Completed
