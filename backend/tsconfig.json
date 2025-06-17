@@ -16,5 +16,5 @@
     "noEmit": true,
     "jsx": "react-jsx"
   },
-  "include": ["src"]
+  "include": ["src", "../frontend/src/components/AssignmentForm.tsx", "../frontend/src/components"]
 }
