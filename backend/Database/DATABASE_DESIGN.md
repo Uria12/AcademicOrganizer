@@ -1,36 +1,41 @@
 # Database Design - Academic Organizer
 
-## Overview
-PostgreSQL database with 3 main entities: Users, Assignments, and Notes.
+## 🔍 Overview
+We're using a PostgreSQL database with 3 main models:
+- Users
+- Assignments
+- Notes
 
-## Tables
+These are connected using basic 1:N relationships.
 
-### Users
-- Stores user authentication data
-- Uses UUID for primary keys
-- Email-based authentication
+## 📊 Tables
 
-### Assignments
-- Linked to users via foreign key
-- Tracks deadline, status, and description
-- Status: pending, in-progress, completed
+### 👤 Users
+- Auth data (email + password hash)
+- UUID as primary key
+- Timestamps for created/updated
 
-### Notes
-- Study materials and resources
-- Optional links and tags for organization
-- Linked to users for privacy
+### 📝 Assignments
+- Linked to each user
+- Has a title, deadline, description (optional), and status
+- Status = 'pending' / 'in-progress' / 'completed' (yeah, just strings for now)
 
-## Relationships
-- One User → Many Assignments (1:N)
-- One User → Many Notes (1:N)
-- Cascade delete: when user deleted, all their data is removed
+### 📒 Notes
+- Study materials or resources
+- Can include optional tags or links
+- Only visible to the owner (user_id foreign key)
 
-## Indexes
-- User lookups on assignments and notes
-- Deadline sorting for assignments
-- Tag-based filtering for notes
+## 🔗 Relationships
+- 1 user → many assignments
+- 1 user → many notes
+- `ON DELETE CASCADE` (if user is deleted, their stuff goes too)
 
-## Next Steps
-- Set up local PostgreSQL
-- Run Prisma migrations
-- Test with sample data
+## ⚡ Indexes
+- Index user_id for fast lookups
+- Sort assignments by deadline
+- Filter notes by tag
+
+## 🧪 Next Steps
+- Run local PostgreSQL (done ✅)
+- Apply Prisma schema and migrate (also done ✅)
+- Test with some mock data (to-do maybe)
