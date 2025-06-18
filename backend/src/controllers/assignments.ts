@@ -12,9 +12,9 @@ export const createAssignment = async (req: Request, res: Response) => {
   }
 
   const { title, description, deadline } = req.body;
-  const userId = req.user.id;
+  const userId = req.user.id; // Extract authenticated user id from jwt middleware
   
-  // Validate required fields
+ // Validate required fields before database operation
   if (!title || !deadline) {
     console.log("❌ Missing required fields:", { title, deadline });
     return res.status(400).json({ error: 'Title and deadline are required' });
@@ -32,7 +32,7 @@ export const createAssignment = async (req: Request, res: Response) => {
       data: {
         title,
         description: description || '',
-        deadline: new Date(deadline),
+        deadline: new Date(deadline), // Convert string deadline to Date object for PostgreSQL storage
         userId,
       },
     });
@@ -55,9 +55,10 @@ export const getAssignments = async (req: Request, res: Response) => {
   console.log("📋 Fetching assignments for user:", userId);
   
   try {
+    // Fetch only assignments belonging to the authenticated user
     const assignments = await prisma.assignment.findMany({ 
       where: { userId },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' } // Show newest assignments first
     });
     
     console.log("📦 Found assignments:", assignments.length);
@@ -71,37 +72,65 @@ export const getAssignments = async (req: Request, res: Response) => {
 export const updateAssignment = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { status } = req.body;
-  
+
+  if (!req.user) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
   console.log("🔄 Updating assignment:", id, "with status:", status);
-  
+
   try {
-    const assignment = await prisma.assignment.update({
+    const existing = await prisma.assignment.findUnique({
+      where: { id }
+    });
+
+    if (!existing || existing.userId !== req.user.id) {
+      return res.status(403).json({ error: 'Forbidden: Not your assignment' });
+    }
+
+    const updated = await prisma.assignment.update({
       where: { id },
       data: { status },
     });
-    
-    console.log("✅ Assignment updated:", assignment);
-    res.json(assignment);
+
+    console.log("✅ Assignment updated:", updated);
+    res.json(updated);
   } catch (error) {
     console.error("❌ Error updating assignment:", error);
     res.status(500).json({ error: 'Failed to update assignment' });
   }
 };
 
+
 export const deleteAssignment = async (req: Request, res: Response) => {
   const { id } = req.params;
-  
-  console.log("🗑️ Deleting assignment:", id);
-  
-  try {
-    await prisma.assignment.delete({ where: { id } });
-    console.log("✅ Assignment deleted successfully");
-    res.status(200).json({ message: 'Assignment deleted' }); 
- } catch (error: any) {
-  if (error.code === 'P2025') {
-    return res.status(404).json({ error: 'Assignment not found' });
+
+  if (!req.user) {
+    return res.status(401).json({ error: 'Unauthorized' });
   }
-  console.error("❌ Error deleting assignment:", error);
-  res.status(500).json({ error: 'Failed to delete assignment' });
-}
+
+  console.log("🗑️ Deleting assignment:", id);
+
+  try {
+    const existing = await prisma.assignment.findUnique({
+      where: { id }
+    });
+
+    if (!existing || existing.userId !== req.user.id) {
+      return res.status(403).json({ error: 'Forbidden: Not your assignment' });
+    }
+
+    await prisma.assignment.delete({
+      where: { id }
+    });
+
+    console.log("✅ Assignment deleted successfully");
+    res.status(200).json({ message: 'Assignment deleted' });
+  } catch (error: any) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'Assignment not found' });
+    }
+    console.error("❌ Error deleting assignment:", error);
+    res.status(500).json({ error: 'Failed to delete assignment' });
+  }
 };
