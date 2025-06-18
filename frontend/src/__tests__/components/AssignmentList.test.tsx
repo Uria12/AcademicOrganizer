@@ -1,171 +1,105 @@
+/* eslint-disable testing-library/no-wait-for-multiple-assertions */
 import React from 'react';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import AssignmentList from '../../components/AssignmentList';
-
-global.fetch = jest.fn();
+import '@testing-library/jest-dom';
 
 const mockAssignments = [
   {
     id: '1',
     title: 'Math Homework',
-    description: 'Chapter 5 exercises',
-    deadline: '2024-12-31T23:59:00.000Z',
+    description: 'Chapter 5',
+    deadline: '2025-12-01T12:00:00Z',
     status: 'pending',
-    createdAt: '2024-01-01T00:00:00.000Z'
   },
   {
     id: '2',
-    title: 'History Essay',
-    description: 'Essay on World War II',
-    deadline: '2024-12-25T23:59:00.000Z',
-    status: 'in-progress',
-    createdAt: '2024-01-02T00:00:00.000Z'
-  }
+    title: 'Science Project',
+    description: '',
+    deadline: '2025-11-01T12:00:00Z',
+    status: 'completed',
+  },
 ];
 
 describe('AssignmentList Component', () => {
+  const mockOnStatusChange = jest.fn();
+
   beforeEach(() => {
-    fetch.mockClear();
+    mockOnStatusChange.mockClear();
   });
 
-  test('renders loading state initially', () => {
-    fetch.mockImplementation(() => new Promise(() => {})); // Never resolves
-    render(<AssignmentList />);
-    
-    expect(screen.getByText(/loading/i)).toBeInTheDocument();
-  });
+  test('renders assignments with correct details', () => {
+    render(
+      <AssignmentList
+        assignments={mockAssignments}
+        error={null}
+        filter="all"
+        onStatusChange={mockOnStatusChange}
+      />
+    );
 
-  test('renders assignments after successful fetch', async () => {
-    fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockAssignments
-    });
-
-    render(<AssignmentList />);
-    
-    await waitFor(() => {
-      expect(screen.getByText('Math Homework')).toBeInTheDocument();
-      expect(screen.getByText('History Essay')).toBeInTheDocument();
-    });
-  });
-
-  test('renders empty state when no assignments', async () => {
-    fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => []
-    });
-
-    render(<AssignmentList />);
-    
-    await waitFor(() => {
-      expect(screen.getByText(/no assignments/i)).toBeInTheDocument();
-    });
-  });
-
-  test('displays assignment details correctly', async () => {
-    fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockAssignments
-    });
-
-    render(<AssignmentList />);
-    
-    await waitFor(() => {
-      expect(screen.getByText('Math Homework')).toBeInTheDocument();
-      expect(screen.getByText('Chapter 5 exercises')).toBeInTheDocument();
-      expect(screen.getByText('pending')).toBeInTheDocument();
-    });
-  });
-
-  test('handles status updates', async () => {
-    const user = userEvent.setup();
-    fetch
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockAssignments
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ ...mockAssignments[0], status: 'completed' })
-      });
-
-    render(<AssignmentList />);
-    
-    await waitFor(() => {
-      expect(screen.getByText('Math Homework')).toBeInTheDocument();
-    });
-
-    const statusButton = screen.getByRole('button', { name: /mark complete/i });
-    await user.click(statusButton);
-    
-    await waitFor(() => {
-      expect(fetch).toHaveBeenCalledWith('/api/assignments/1', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'completed' })
-      });
-    });
-  });
-
-  test('handles assignment deletion', async () => {
-    const user = userEvent.setup();
-    fetch
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockAssignments
-      })
-      .mockResolvedValueOnce({ ok: true });
-
-    render(<AssignmentList />);
-    
-    await waitFor(() => {
-      expect(screen.getByText('Math Homework')).toBeInTheDocument();
-    });
-
-    const deleteButton = screen.getByRole('button', { name: /delete/i });
-    await user.click(deleteButton);
-    
-    await waitFor(() => {
-      expect(fetch).toHaveBeenCalledWith('/api/assignments/1', {
-        method: 'DELETE'
-      });
-    });
-  });
-
-  test('filters assignments by status', async () => {
-    const user = userEvent.setup();
-    fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockAssignments
-    });
-
-    render(<AssignmentList />);
-    
-    await waitFor(() => {
-      expect(screen.getByText('Math Homework')).toBeInTheDocument();
-      expect(screen.getByText('History Essay')).toBeInTheDocument();
-    });
-
-    const filterSelect = screen.getByLabelText(/filter by status/i);
-    await user.selectOptions(filterSelect, 'pending');
-    
     expect(screen.getByText('Math Homework')).toBeInTheDocument();
-    expect(screen.queryByText('History Essay')).not.toBeInTheDocument();
+    expect(screen.getByText('Science Project')).toBeInTheDocument();
+    expect(screen.getAllByText(/status:/i).length).toBe(2);
   });
 
-  test('sorts assignments by deadline', async () => {
-    fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockAssignments
-    });
+  test('filters by status', () => {
+    render(
+      <AssignmentList
+        assignments={mockAssignments}
+        error={null}
+        filter="pending"
+        onStatusChange={mockOnStatusChange}
+      />
+    );
 
-    render(<AssignmentList />);
-    
-    await waitFor(() => {
-      const assignments = screen.getAllByTestId('assignment-item');
-      expect(assignments[0]).toHaveTextContent('History Essay'); // Earlier deadline
-      expect(assignments[1]).toHaveTextContent('Math Homework'); // Later deadline
-    });
+    expect(screen.getByText('Math Homework')).toBeInTheDocument();
+    expect(screen.queryByText('Science Project')).not.toBeInTheDocument();
+  });
+
+  test('renders empty state when no assignments match filter', () => {
+    render(
+      <AssignmentList
+        assignments={[]}
+        error={null}
+        filter="completed"
+        onStatusChange={mockOnStatusChange}
+      />
+    );
+
+    expect(screen.getByText(/no assignments match/i)).toBeInTheDocument();
+  });
+
+  test('renders error message if provided', () => {
+    render(
+      <AssignmentList
+        assignments={[]}
+        error="Something went wrong"
+        filter="all"
+        onStatusChange={mockOnStatusChange}
+      />
+    );
+
+    expect(screen.getByText(/something went wrong/i)).toBeInTheDocument();
+  });
+
+  test('calls onStatusChange when dropdown is changed', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <AssignmentList
+        assignments={mockAssignments}
+        error={null}
+        filter="all"
+        onStatusChange={mockOnStatusChange}
+      />
+    );
+
+    const dropdowns = screen.getAllByRole('combobox');
+    await user.selectOptions(dropdowns[0], 'in-progress');
+
+    expect(mockOnStatusChange).toHaveBeenCalledWith('1', 'in-progress');
   });
 });

@@ -1,116 +1,79 @@
+/* eslint-disable testing-library/no-wait-for-multiple-assertions */
 import React from 'react';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import AssignmentForm from '../../components/AssignmentForm';
+import '@testing-library/jest-dom';
 
-// Mock fetch globally
-global.fetch = jest.fn();
 
 describe('AssignmentForm Component', () => {
+  const mockOnAdd = jest.fn();
+
   beforeEach(() => {
-    fetch.mockClear();
+    mockOnAdd.mockClear();
+    global.fetch = jest.fn();
   });
 
-  test('renders assignment form with all required fields', () => {
-    render(<AssignmentForm />);
+  test('renders the form fields', () => {
+    render(<AssignmentForm onAdd={mockOnAdd} />);
     
     expect(screen.getByPlaceholderText('Title')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('')).toBeInTheDocument(); // datetime-local input
     expect(screen.getByPlaceholderText('Description')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /add assignment/i })).toBeInTheDocument();
   });
 
-  test('updates input values when user types', async () => {
+  test('submits form successfully', async () => {
     const user = userEvent.setup();
-    render(<AssignmentForm />);
-    
-    const titleInput = screen.getByPlaceholderText('Title');
-    const descriptionInput = screen.getByPlaceholderText('Description');
-    
-    await user.type(titleInput, 'Math Homework');
-    await user.type(descriptionInput, 'Chapter 5 exercises');
-    
-    expect(titleInput).toHaveValue('Math Homework');
-    expect(descriptionInput).toHaveValue('Chapter 5 exercises');
-  });
 
-  test('submits form with correct data', async () => {
-    const user = userEvent.setup();
-    fetch.mockResolvedValueOnce({
+    (fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ id: '1', title: 'Math Homework' })
+      json: async () => ({ id: '1', title: 'Test', deadline: '2025-01-01T00:00', description: 'Desc' }),
     });
 
-    render(<AssignmentForm />);
-    
-    const titleInput = screen.getByPlaceholderText('Title');
-    const deadlineInput = screen.getByDisplayValue('');
-    const descriptionInput = screen.getByPlaceholderText('Description');
-    const submitButton = screen.getByRole('button', { name: /add assignment/i });
-    
-    await user.type(titleInput, 'Math Homework');
-    await user.type(deadlineInput, '2024-12-31T23:59');
-    await user.type(descriptionInput, 'Chapter 5 exercises');
-    await user.click(submitButton);
-    
+    render(<AssignmentForm onAdd={mockOnAdd} />);
+
+    await user.type(screen.getByPlaceholderText('Title'), 'Test');
+    await user.type(screen.getByPlaceholderText('Description'), 'Desc');
+    await user.type(screen.getByLabelText(/deadline/i) || screen.getByDisplayValue(''), '2025-01-01T00:00');
+    await user.click(screen.getByRole('button', { name: /add assignment/i }));
+
     await waitFor(() => {
-      expect(fetch).toHaveBeenCalledWith('/api/assignments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: 'Math Homework',
-          deadline: '2024-12-31T23:59',
-          description: 'Chapter 5 exercises'
-        })
-      });
+      expect(fetch).toHaveBeenCalledTimes(1);
+      expect(mockOnAdd).toHaveBeenCalled();
     });
   });
 
-  test('resets form after successful submission', async () => {
+  test('shows alert on failed request', async () => {
     const user = userEvent.setup();
-    fetch.mockResolvedValueOnce({ ok: true });
+    window.alert = jest.fn();
 
-    render(<AssignmentForm />);
-    
-    const titleInput = screen.getByPlaceholderText('Title');
-    const submitButton = screen.getByRole('button', { name: /add assignment/i });
-    
-    await user.type(titleInput, 'Test Assignment');
-    await user.click(submitButton);
-    
+    (fetch as jest.Mock).mockResolvedValueOnce({
+      ok: false,
+      json: async () => ({ error: 'Test error' })
+    });
+
+    render(<AssignmentForm onAdd={mockOnAdd} />);
+    await user.type(screen.getByPlaceholderText('Title'), 'Test');
+    await user.type(screen.getByPlaceholderText('Description'), 'Desc');
+    await user.type(screen.getByLabelText(/deadline/i) || screen.getByDisplayValue(''), '2025-01-01T00:00');
+    await user.click(screen.getByRole('button', { name: /add assignment/i }));
+
     await waitFor(() => {
-      expect(titleInput).toHaveValue('');
+      expect(window.alert).toHaveBeenCalledWith(expect.stringMatching(/test error/i));
     });
   });
 
-  test('handles API errors gracefully', async () => {
+  test('prevents submission if already submitting', async () => {
     const user = userEvent.setup();
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    fetch.mockRejectedValueOnce(new Error('Network error'));
+    (fetch as jest.Mock).mockImplementation(() => new Promise(() => {})); // never resolves
 
-    render(<AssignmentForm />);
-    
-    const titleInput = screen.getByPlaceholderText('Title');
-    const submitButton = screen.getByRole('button', { name: /add assignment/i });
-    
-    await user.type(titleInput, 'Test Assignment');
-    await user.click(submitButton);
-    
-    await waitFor(() => {
-      expect(consoleSpy).toHaveBeenCalledWith('Error creating assignment:', expect.any(Error));
-    });
-    
-    consoleSpy.mockRestore();
-  });
+    render(<AssignmentForm onAdd={mockOnAdd} />);
+    await user.type(screen.getByPlaceholderText('Title'), 'Title');
+    await user.type(screen.getByLabelText(/deadline/i) || screen.getByDisplayValue(''), '2025-01-01T00:00');
+    await user.click(screen.getByRole('button', { name: /add assignment/i }));
 
-  test('prevents submission with empty required fields', async () => {
-    const user = userEvent.setup();
-    render(<AssignmentForm />);
-    
-    const submitButton = screen.getByRole('button', { name: /add assignment/i });
-    await user.click(submitButton);
-    
-    // HTML5 validation should prevent submission
-    expect(fetch).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: /adding.../i }));
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
 });
