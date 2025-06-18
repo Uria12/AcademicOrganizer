@@ -12,6 +12,3 @@
 - **Test Types**: Component tests, User interaction tests
 - **Location**: `frontend/src/__tests__/`
 
-## Planned Test Structure
-
-### Backend Tests
