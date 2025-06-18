@@ -17,6 +17,34 @@ const App: React.FC = () => {
   const [sort, setSort] = useState<'asc' | 'desc'>('asc');
   const [loading, setLoading] = useState(false);
 
+const handleStatusChange = async (id: string, newStatus: string) => {
+  console.log(`🔄 Updating assignment ${id} to status: ${newStatus}`);
+  try {
+    const response = await fetch(`/api/assignments/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ status: newStatus }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to update assignment ${id}`);
+    }
+
+    setAssignments((prev) =>
+      prev.map((a) =>
+        a.id === id ? { ...a, status: newStatus } : a
+      )
+    );
+  } catch (err) {
+    console.error(`❌ Error updating assignment ${id}:`, err);
+    alert('Failed to update status. Try again later.');
+  }
+};
+
+
+
   const fetchAssignments = async () => {
     console.log('🔄 Fetching assignments...');
     try {
@@ -108,7 +136,12 @@ const App: React.FC = () => {
       {loading ? (
         <p className="text-gray-500">Loading assignments...</p>
       ) : (
-        <AssignmentList assignments={assignments} error={error} filter={filter} />
+        <AssignmentList
+  assignments={assignments}
+  error={error}
+  filter={filter}
+  onStatusChange={handleStatusChange}
+/>
       )}
     </div>
   );
