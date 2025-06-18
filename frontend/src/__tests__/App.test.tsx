@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import App from '../App';
-import '@testing-library/jest-dom'; // ← ADD THIS
+import '@testing-library/jest-dom';
 
 test('renders App component with no crash', () => {
   render(
@@ -10,5 +10,5 @@ test('renders App component with no crash', () => {
       <App />
     </BrowserRouter>
   );
-  expect(screen.getByText('App works')).toBeInTheDocument();
+ expect(screen.getByText(/add new assignment/i)).toBeInTheDocument();
 });

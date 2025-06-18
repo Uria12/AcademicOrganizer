@@ -71,14 +71,16 @@ const AssignmentForm: React.FC<Props> = ({ onAdd }) => {
           required
           disabled={isSubmitting}
         />
-        <input
-          type="datetime-local"
-          value={assignment.deadline}
-          onChange={(e) => setAssignment({ ...assignment, deadline: e.target.value })}
-          className="p-2 border rounded"
-          required
-          disabled={isSubmitting}
-        />
+        <label htmlFor="deadline" className="sr-only">Deadline</label>
+<input
+  id="deadline"
+  type="datetime-local"
+  value={assignment.deadline}
+  onChange={(e) => setAssignment({ ...assignment, deadline: e.target.value })}
+  className="p-2 border rounded"
+  required
+  disabled={isSubmitting}
+/>
         <textarea
           placeholder="Description"
           value={assignment.description}
