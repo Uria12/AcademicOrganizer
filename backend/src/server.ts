@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 5000;
 
 app.use(express.json());
 
-/*
+
 // 🧪 TEMPORARY MOCK AUTH MIDDLEWARE — FOR POSTMAN TESTING ONLY
 // pretend the user is already authenticated by hardcoding a user ID
 // todo: REMOVE THIS ONCE REAL AUTH SYSTEM IS PLUGGED IN
@@ -18,7 +18,7 @@ app.use((req: any, res, next) => {
   req.user = { id: '720827c0-dbae-49f5-bdc4-3a5b4467e475' }; // 👤 Simulated user ID
   next();
 });
-*/
+
 
 // Routes
 app.use('/api/auth', authRoutes);

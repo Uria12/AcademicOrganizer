@@ -96,9 +96,12 @@ export const deleteAssignment = async (req: Request, res: Response) => {
   try {
     await prisma.assignment.delete({ where: { id } });
     console.log("✅ Assignment deleted successfully");
-    res.status(204).send();
-  } catch (error) {
-    console.error("❌ Error deleting assignment:", error);
-    res.status(500).json({ error: 'Failed to delete assignment' });
+    res.status(200).json({ message: 'Assignment deleted' }); 
+ } catch (error: any) {
+  if (error.code === 'P2025') {
+    return res.status(404).json({ error: 'Assignment not found' });
   }
+  console.error("❌ Error deleting assignment:", error);
+  res.status(500).json({ error: 'Failed to delete assignment' });
+}
 };
