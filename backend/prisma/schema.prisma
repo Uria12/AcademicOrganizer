@@ -7,6 +7,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// User authentication and profile data
+
 model User {
   id          String        @id @default(uuid())
   email       String        @unique
@@ -17,6 +19,8 @@ model User {
 
   @@map("users") // 🔁 mapped to renamed table
 }
+
+// Student assignments with deadlines and status tracking
 
 model Assignment {
   id          String   @id @default(uuid())
@@ -30,6 +34,8 @@ model Assignment {
 
   @@map("assignments") // 🔁 mapped to renamed table
 }
+
+// Study notes and resources linked to users
 
 model Note {
   id        String   @id @default(uuid())

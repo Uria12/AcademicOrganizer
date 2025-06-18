@@ -35,12 +35,13 @@ const AssignmentForm: React.FC<Props> = ({ onAdd }) => {
       });
 
       console.log('📡 Response status:', response.status);
-      
+
+      // Handle both network errors and API validation errors
       if (response.ok) {
         const result = await response.json();
         console.log('✅ Assignment created successfully:', result);
         
-        // reset form
+        // Reset form to initial state after successful creation
         setAssignment({ title: '', deadline: '', description: '' });
         
         // refresh the list

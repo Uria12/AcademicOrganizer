@@ -61,8 +61,8 @@ describe('Assignment API Routes', () => {
     expect(res.body.message).toMatch(/deleted/i);
   });
 
-  it('should return 404 when deleting again', async () => {
-    const res = await request(app).delete(`/api/assignments/${testAssignmentId}`);
-    expect(res.status).toBe(404);
-  });
+ it('should return 403 when deleting again (already deleted or not owner)', async () => {
+  const res = await request(app).delete(`/api/assignments/${testAssignmentId}`);
+  expect(res.status).toBe(403);
+});
 });

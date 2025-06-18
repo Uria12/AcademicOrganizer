@@ -16,6 +16,7 @@ type Props = {
 };
 
 const AssignmentList: React.FC<Props> = ({ assignments, error, filter, onStatusChange }) => {
+  // Filter assignments based on selected status (all, pending, in-progress, completed)
   const filtered = filter === 'all'
     ? assignments
     : assignments.filter((a) => a.status === filter);
@@ -33,13 +34,13 @@ const AssignmentList: React.FC<Props> = ({ assignments, error, filter, onStatusC
               <div className="font-bold">{assignment.title}</div>
               {assignment.description && <p>{assignment.description}</p>}
               <div className="text-sm text-gray-600">
-                Due: {new Date(assignment.deadline).toLocaleString()}
+                Due: {new Date(assignment.deadline).toLocaleString()}  
               </div>
               <div className="mt-2 text-sm">
                 <label className="mr-2 font-medium">Status:</label>
                 <select
                   value={assignment.status || 'pending'}
-                  onChange={(e) => onStatusChange(assignment.id, e.target.value)}
+                  onChange={(e) => onStatusChange(assignment.id, e.target.value)} // Update assignment status via API call to backend
                   className="p-1 border rounded"
                 >
                   <option value="pending">Pending</option>

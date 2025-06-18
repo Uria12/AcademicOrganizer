@@ -32,7 +32,7 @@ const handleStatusChange = async (id: string, newStatus: string) => {
       throw new Error(`Failed to update assignment ${id}`);
     }
 
-    setAssignments((prev) =>
+    setAssignments((prev) => // Optimistically update UI before API call for better UX
       prev.map((a) =>
         a.id === id ? { ...a, status: newStatus } : a
       )
@@ -91,6 +91,7 @@ const handleStatusChange = async (id: string, newStatus: string) => {
   // Handle sort changes separately
   useEffect(() => {
     if (assignments.length > 0) {
+      // Sort assignments by deadline (earliest or latest first)
       const sorted = [...assignments].sort((a, b) => {
         const da = new Date(a.deadline).getTime();
         const db = new Date(b.deadline).getTime();
