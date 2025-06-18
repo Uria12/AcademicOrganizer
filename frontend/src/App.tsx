@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useState } from 'react';
 import AssignmentForm from './components/AssignmentForm';
 import AssignmentList from './components/AssignmentList';
@@ -40,6 +41,38 @@ const handleStatusChange = async (id: string, newStatus: string) => {
   } catch (err) {
     console.error(`❌ Error updating assignment ${id}:`, err);
     alert('Failed to update status. Try again later.');
+  }
+};
+
+const handleDelete = async (id: string) => {
+  try {
+    const res = await fetch(`/api/assignments/${id}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Failed to delete assignment');
+    setAssignments((prev) => prev.filter((a) => a.id !== id));
+  } catch (err) {
+    console.error('❌ Error deleting assignment:', err);
+    alert('Failed to delete assignment. Try again.');
+  }
+};
+
+const handleUpdate = async (
+  id: string,
+  updates: Partial<Pick<Assignment, 'title' | 'description' | 'deadline'>>
+) => {
+  try {
+    const res = await fetch(`/api/assignments/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    });
+    if (!res.ok) throw new Error('Failed to update assignment');
+    const updated = await res.json();
+    setAssignments((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, ...updated } : a))
+    );
+  } catch (err) {
+    console.error('❌ Error updating assignment:', err);
+    alert('Failed to update. Try again.');
   }
 };
 
@@ -142,6 +175,8 @@ const handleStatusChange = async (id: string, newStatus: string) => {
   error={error}
   filter={filter}
   onStatusChange={handleStatusChange}
+  onDelete={handleDelete}
+  onUpdate={handleUpdate}
 />
       )}
     </div>
