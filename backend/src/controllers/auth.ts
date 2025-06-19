@@ -10,8 +10,13 @@ if (!process.env.JWT_SECRET) {
   throw new Error('JWT_SECRET environment variable is missing');
 }
 
+if (!process.env.BCRYPT_ROUNDS) {
+  throw new Error('BCRYPT_ROUNDS environment variable is missing');
+}
+
 const JWT_SECRET: string = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN: string = process.env.JWT_EXPIRES_IN || '24h';
+const BCRYPT_ROUNDS: number = parseInt(process.env.BCRYPT_ROUNDS);
 
 // Extend Express Request interface
 declare global {
@@ -41,19 +46,23 @@ export const register = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'User with this email already exists' });
     }
 
-    // Hash password with salt rounds
-    const hashedPassword = await bcrypt.hash(password, 12);
+    // Hash password with configured salt rounds
+    const hashedPassword = await bcrypt.hash(password, BCRYPT_ROUNDS);
     
-    // Create new user
+    // Create new user with password_hash field
     const user = await prisma.user.create({
       data: { 
         email, 
-        password: hashedPassword 
+        password_hash: hashedPassword 
       },
-      select: { id: true, email: true, createdAt: true }
+      select: { 
+        id: true, 
+        email: true, 
+        created_at: true 
+      }
     });
 
-    // Generate JWT token with type assertion
+    // Generate JWT token
     const token = jwt.sign(
       { userId: user.id },
       JWT_SECRET,
@@ -77,7 +86,7 @@ export const login = async (req: Request, res: Response) => {
     
     console.log('🔐 Login attempt for email:', email);
 
-    // Find user by email
+    // Find user by email with password_hash
     const user = await prisma.user.findUnique({ 
       where: { email } 
     });
@@ -87,15 +96,15 @@ export const login = async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    // Verify password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    // Verify password against password_hash
+    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
     
     if (!isPasswordValid) {
       console.log('❌ Invalid password for user:', email);
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    // Generate JWT token with type assertion
+    // Generate JWT token
     const token = jwt.sign(
       { userId: user.id }, 
       JWT_SECRET, 
@@ -134,14 +143,24 @@ export const getCurrentUser = async (req: Request, res: Response) => {
     // Fetch fresh user data from database
     const currentUser = await prisma.user.findUnique({
       where: { id: req.user.id },
-      select: { id: true, email: true, createdAt: true }
+      select: { 
+        id: true, 
+        email: true, 
+        created_at: true 
+      }
     });
 
     if (!currentUser) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    res.json({ user: currentUser });
+    res.json({ 
+      user: {
+        id: currentUser.id,
+        email: currentUser.email,
+        createdAt: currentUser.created_at
+      }
+    });
   } catch (error) {
     console.error('❌ Get current user error:', error);
     res.status(500).json({ error: 'Failed to get user info' });
