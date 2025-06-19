@@ -1,0 +1,26 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: 1
+      POSTGRES_DB: academic_organizer
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    environment:
+      DATABASE_URL: "postgresql://academic_user:password@db:5432/academic_organizer?schema=public"
+      JWT_SECRET: "your_jwt_secret"
+      BCRYPT_ROUNDS: "12"
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
