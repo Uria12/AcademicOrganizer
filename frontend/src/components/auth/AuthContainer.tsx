@@ -1,13 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; // Added useEffect import
+import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 // Types
-interface User {
-  id: string;
-  email: string;
-}
-
 interface AuthResponse {
-  user: User;
+  user: { id: string; email: string };
   token: string;
 }
 
@@ -17,11 +14,12 @@ interface AuthError {
 
 // LoginForm Component
 interface LoginFormProps {
-  onSuccess: (user: User, token: string) => void;
   onSwitchToRegister: () => void;
 }
 
-const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onSwitchToRegister }) => {
+const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
+  const { login } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -68,9 +66,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onSwitchToRegister }) 
 
       if (response.ok) {
         const authData = data as AuthResponse;
-        localStorage.setItem('authToken', authData.token);
-        onSuccess(authData.user, authData.token);
+        login(authData.user, authData.token);
         setFormData({ email: '', password: '' });
+        navigate('/dashboard');
       } else {
         const errorData = data as AuthError;
         setError(errorData.error || 'Login failed');
@@ -188,11 +186,12 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onSwitchToRegister }) 
 
 // RegisterForm Component
 interface RegisterFormProps {
-  onSuccess: (user: User, token: string) => void;
   onSwitchToLogin: () => void;
 }
 
-const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess, onSwitchToLogin }) => {
+const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
+  const { login } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -251,9 +250,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess, onSwitchToLogin 
 
       if (response.ok) {
         const authData = data as AuthResponse;
-        localStorage.setItem('authToken', authData.token);
-        onSuccess(authData.user, authData.token);
+        login(authData.user, authData.token);
         setFormData({ email: '', password: '', confirmPassword: '' });
+        navigate('/dashboard');
       } else {
         const errorData = data as AuthError;
         setError(errorData.error || 'Registration failed');
@@ -426,24 +425,30 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess, onSwitchToLogin 
 
 // AuthContainer Component
 interface AuthContainerProps {
-  onSuccess: (user: User, token: string) => void;
+  initialView?: 'login' | 'register';
 }
 
-const AuthContainer: React.FC<AuthContainerProps> = ({ onSuccess }) => {
-  const [currentView, setCurrentView] = useState<'login' | 'register'>('login');
+const AuthContainer: React.FC<AuthContainerProps> = ({ initialView = 'login' }) => {
+  const { isAuthenticated } = useAuth();
+  const [currentView, setCurrentView] = useState<'login' | 'register'>(initialView);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
+
+  if (isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       {currentView === 'login' ? (
-        <LoginForm
-          onSuccess={onSuccess}
-          onSwitchToRegister={() => setCurrentView('register')}
-        />
+        <LoginForm onSwitchToRegister={() => setCurrentView('register')} />
       ) : (
-        <RegisterForm
-          onSuccess={onSuccess}
-          onSwitchToLogin={() => setCurrentView('login')}
-        />
+        <RegisterForm onSwitchToLogin={() => setCurrentView('login')} />
       )}
     </div>
   );

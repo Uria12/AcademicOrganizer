@@ -1,10 +1,18 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt, { SignOptions } from 'jsonwebtoken';
+import dotenv from 'dotenv';
+dotenv.config();
+
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
-
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL
+    }
+  }
+});
 // Validate JWT environment variables at startup
 if (!process.env.JWT_SECRET) {
   throw new Error('JWT_SECRET environment variable is missing');

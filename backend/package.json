@@ -4,6 +4,7 @@
   "description": "Backend API for Super Academic Organizer - Student task and note management",
   "main": "dist/server.js",
   "scripts": {
+    "migrate": "prisma migrate deploy",
     "start": "node dist/server.js",
     "dev": "tsc-watch --onSuccess \"node dist/server.js\"",
     "build": "tsc",
@@ -16,6 +17,7 @@
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
     "db:studio": "prisma studio"
+    
   },
   "dependencies": {
     "@prisma/client": "^4.16.2",
@@ -27,6 +29,7 @@
     "helmet": "^6.0.1",
     "joi": "^17.8.3",
     "jsonwebtoken": "^9.0.0",
+    "jwt-decode": "^4.0.0",
     "morgan": "^1.10.0",
     "zod": "^3.25.67"
   },
