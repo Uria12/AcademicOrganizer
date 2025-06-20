@@ -1,51 +1,46 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["multiSchema"]
 }
-
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["public"]
 }
 
 model User {
-  id            String        @id @default(uuid())
-  email         String        @unique
-  password_hash String
-  created_at    DateTime      @default(now()) @map("created_at")
-  updated_at    DateTime      @updatedAt @map("updated_at")
-  assignments   Assignment[]
-  notes         Note[]
+  id          String       @id(map: "User_pkey") @default(uuid())
+  email       String       @unique(map: "User_email_key")
+  password    String
+  createdAt   DateTime     @default(now())
+  assignments Assignment[]
+  notes       Note[]
 
   @@map("users")
 }
 
 model Assignment {
-  id          String   @id @default(uuid())
+  id          String   @id(map: "Assignment_pkey") @default(uuid())
   title       String
   description String?
   deadline    DateTime
   status      String   @default("pending")
-  created_at  DateTime @default(now()) @map("created_at")
-  updated_at  DateTime @updatedAt @map("updated_at")
-  userId      String   @map("user_id")
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  userId      String
+  users       User     @relation(fields: [userId], references: [id], map: "Assignment_userId_fkey")
 
   @@map("assignments")
 }
 
 model Note {
-  id          String   @id @default(uuid())
-  title       String
-  content     String
-  link        String?
-  tag         String?
-  created_at  DateTime @default(now()) @map("created_at")
-  updated_at  DateTime @updatedAt @map("updated_at")
-  userId      String   @map("user_id")
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String   @id(map: "Note_pkey") @default(uuid())
+  title     String
+  content   String
+  link      String?
+  tag       String?
+  createdAt DateTime @default(now())
+  userId    String
+  users     User     @relation(fields: [userId], references: [id], map: "Note_userId_fkey")
 
   @@map("notes")
 }
