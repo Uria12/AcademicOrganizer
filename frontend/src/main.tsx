@@ -9,15 +9,10 @@ if (!rootElement) throw new Error('Failed to find the root element');
 
 const root = ReactDOM.createRoot(rootElement);
 
-// Create a separate AuthWrapper component
-const AuthWrapper = () => (
-  <AuthProvider>
-    <App />
-  </AuthProvider>
-);
-
 root.render(
   <React.StrictMode>
-    <AuthWrapper />
+    <AuthProvider>
+      <App />
+    </AuthProvider>
   </React.StrictMode>
 );

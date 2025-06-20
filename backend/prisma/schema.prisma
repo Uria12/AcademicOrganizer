@@ -1,26 +1,26 @@
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
 }
+
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  schemas  = ["public"]
 }
-
-// User authentication and profile data
 
 model User {
-  id          String        @id @default(uuid())
-  email       String        @unique
-  password    String
-  createdAt   DateTime      @default(now())
-  assignments Assignment[]
-  notes       Note[]
+  id            String        @id @default(uuid())
+  email         String        @unique
+  password_hash String
+  created_at    DateTime      @default(now()) @map("created_at")
+  updated_at    DateTime      @updatedAt @map("updated_at")
+  assignments   Assignment[]
+  notes         Note[]
 
-  @@map("users") // 🔁 mapped to renamed table
+  @@map("users")
 }
-
-// Student assignments with deadlines and status tracking
 
 model Assignment {
   id          String   @id @default(uuid())
@@ -28,24 +28,24 @@ model Assignment {
   description String?
   deadline    DateTime
   status      String   @default("pending")
-  createdAt   DateTime @default(now())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
+  created_at  DateTime @default(now()) @map("created_at")
+  updated_at  DateTime @updatedAt @map("updated_at")
+  userId      String   @map("user_id")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("assignments") // 🔁 mapped to renamed table
+  @@map("assignments")
 }
 
-// Study notes and resources linked to users
-
 model Note {
-  id        String   @id @default(uuid())
-  title     String
-  content   String
-  link      String?
-  tag       String?
-  createdAt DateTime @default(now())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  id          String   @id @default(uuid())
+  title       String
+  content     String
+  link        String?
+  tag         String?
+  created_at  DateTime @default(now()) @map("created_at")
+  updated_at  DateTime @updatedAt @map("updated_at")
+  userId      String   @map("user_id")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("notes") // 🔁 mapped to renamed table
+  @@map("notes")
 }

@@ -4,8 +4,9 @@
   "description": "Backend API for Super Academic Organizer - Student task and note management",
   "main": "dist/server.js",
   "scripts": {
+    "migrate": "prisma migrate deploy",
     "start": "node dist/server.js",
-    "dev": "nodemon src/server.ts",
+    "dev": "tsc-watch --onSuccess \"node dist/server.js\"",
     "build": "tsc",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -16,24 +17,26 @@
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
     "db:studio": "prisma studio"
+    
   },
   "dependencies": {
     "@prisma/client": "^4.16.2",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
-    "dotenv": "^16.0.3",
-    "express": "^4.18.2",
+    "dotenv": "^16.5.0",
+    "express": "^4.21.2",
     "express-rate-limit": "^6.7.0",
     "helmet": "^6.0.1",
     "joi": "^17.8.3",
     "jsonwebtoken": "^9.0.0",
+    "jwt-decode": "^4.0.0",
     "morgan": "^1.10.0",
     "zod": "^3.25.67"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.2",
     "@types/cors": "^2.8.13",
-    "@types/express": "^4.17.17",
+    "@types/express": "^4.17.23",
     "@types/jest": "^29.5.14",
     "@types/jsonwebtoken": "^9.0.1",
     "@types/mocha": "^10.0.10",
@@ -49,7 +52,8 @@
     "prisma": "^4.16.2",
     "supertest": "^6.3.3",
     "ts-jest": "^29.0.5",
-    "ts-node": "^10.9.1",
+    "ts-node": "^10.9.2",
+    "tsc-watch": "^7.1.1",
     "typescript": "^4.9.5"
   },
   "keywords": [

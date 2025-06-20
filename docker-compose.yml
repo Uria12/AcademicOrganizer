@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:13
+    container_name: academic_organizer_db
+    environment:
+      POSTGRES_USER: academic_user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: academic_organizer
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - academic-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U academic_user -d academic_organizer"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    container_name: academic_organizer_backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      DATABASE_URL: "postgresql://academic_user:password@db:5432/academic_organizer?schema=public"
+      JWT_SECRET: "super-secret-jwt-key-here-change-this-in-production"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - academic-network
+    command: sh -c "npm run migrate && npm start"
+
+networks:
+  academic-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
