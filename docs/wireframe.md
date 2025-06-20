@@ -2,7 +2,7 @@
 
 This wireframe was created during early design planning to visualize the dashboard layout and user flow.
 
-![Wireframe](./assets/wireframe.png)
+![Wireframe](https://ibb.co/yF7XPCfh)
 
 ## Key Elements:
 - Left: Assignment form
