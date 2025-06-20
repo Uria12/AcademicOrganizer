@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "types": ["node"],
     "target": "ES6",
     "lib": ["DOM", "DOM.Iterable", "ES6"],
     "allowJs": true,
