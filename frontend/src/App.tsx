@@ -66,6 +66,20 @@ const App: React.FC = () => {
     }
   }, []);
 
+  // Handle assignment update
+  const handleUpdate = useCallback(async (id: string, updatedData: Partial<Assignment>) => {
+    console.log(`🔄 Updating assignment ${id} with data:`, updatedData);
+    try {
+      await apiClient.put(`/assignments/${id}`, updatedData);
+      setAssignments(prev => 
+        prev.map(a => a.id === id ? { ...a, ...updatedData } : a)
+      );
+    } catch (err) {
+      console.error(`❌ Error updating assignment ${id}:`, err);
+      alert('Failed to update assignment. Try again later.');
+    }
+  }, []);
+
   // Load assignments when authentication state changes
   useEffect(() => {
     if (isAuthenticated) {
@@ -102,6 +116,7 @@ const App: React.FC = () => {
                 loading={loading}
                 onStatusChange={handleStatusChange}
                 onDelete={handleDelete}
+                onUpdate={handleUpdate}
                 fetchAssignments={fetchAssignments}
                 logout={logout}
                 user={user ?? undefined}
@@ -117,6 +132,7 @@ const App: React.FC = () => {
                 loading={loading}
                 onStatusChange={handleStatusChange}
                 onDelete={handleDelete}
+                onUpdate={handleUpdate}
                 fetchAssignments={fetchAssignments}
                 logout={logout}
                 user={user ?? undefined}

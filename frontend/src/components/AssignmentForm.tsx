@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import apiClient from '../api/client';
 
 type Props = {
   onAdd: () => void;
@@ -21,39 +22,26 @@ const AssignmentForm: React.FC<Props> = ({ onAdd }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (isSubmitting) return; // Prevent duplicate submissions
+    if (isSubmitting) return;
     
     setIsSubmitting(true);
     
     try {
       console.log('📤 Submitting assignment:', assignment);
       
-      const response = await fetch('/api/assignments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(assignment)
-      });
+      const response = await apiClient.post('/assignments', assignment);
 
-      console.log('📡 Response status:', response.status);
-
-      // Handle both network errors and API validation errors
-      if (response.ok) {
-        const result = await response.json();
-        console.log('✅ Assignment created successfully:', result);
-        
-        // Reset form to initial state after successful creation
-        setAssignment({ title: '', deadline: '', description: '' });
-        
-        // refresh the list
-        onAdd();
-      } else {
-        const errorData = await response.json();
-        console.error('❌ Failed to create assignment:', errorData);
-        alert('Failed to create assignment: ' + (errorData.error || 'Unknown error'));
-      }
-    } catch (error) {
-      console.error('❌ Network error creating assignment:', error);
-      alert('Network error. Please try again.');
+      console.log('✅ Assignment created successfully:', response.data);
+      
+      // Reset form to initial state after successful creation
+      setAssignment({ title: '', deadline: '', description: '' });
+      
+      // refresh the list
+      onAdd();
+    } catch (error: any) {
+      console.error('❌ Failed to create assignment:', error);
+      const errorMessage = error.response?.data?.error || error.message || 'Unknown error';
+      alert('Failed to create assignment: ' + errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -73,15 +61,15 @@ const AssignmentForm: React.FC<Props> = ({ onAdd }) => {
           disabled={isSubmitting}
         />
         <label htmlFor="deadline" className="sr-only">Deadline</label>
-<input
-  id="deadline"
-  type="datetime-local"
-  value={assignment.deadline}
-  onChange={(e) => setAssignment({ ...assignment, deadline: e.target.value })}
-  className="p-2 border rounded"
-  required
-  disabled={isSubmitting}
-/>
+        <input
+          id="deadline"
+          type="datetime-local"
+          value={assignment.deadline}
+          onChange={(e) => setAssignment({ ...assignment, deadline: e.target.value })}
+          className="p-2 border rounded"
+          required
+          disabled={isSubmitting}
+        />
         <textarea
           placeholder="Description"
           value={assignment.description}
