@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import AssignmentForm from '../components/AssignmentForm';
@@ -10,6 +11,7 @@ interface DashboardProps {
   loading: boolean;
   onStatusChange: (id: string, newStatus: string) => void;
   onDelete: (id: string) => void;
+  onUpdate: (id: string, updatedData: Partial<Assignment>) => void;
   fetchAssignments: () => void;
   logout: () => void;
   user?: { email: string };
@@ -21,6 +23,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   loading,
   onStatusChange,
   onDelete,
+  onUpdate,
   fetchAssignments,
   logout,
   user
@@ -110,11 +113,13 @@ const Dashboard: React.FC<DashboardProps> = ({
               </div>
             ) : (
               <AssignmentList
-                    assignments={filteredAssignments}
-                    onStatusChange={onStatusChange}
-                    onDelete={onDelete} error={null} filter={''} onUpdate={function (id: string, updatedData: Partial<{ id: string; title: string; deadline: string; description?: string; status?: string; }>): void {
-                      throw new Error('Function not implemented.');
-                    } }              />
+                assignments={filteredAssignments}
+                error={error}
+                filter={filter}
+                onStatusChange={onStatusChange}
+                onDelete={onDelete}
+                onUpdate={onUpdate}
+              />
             )}
           </div>
         </div>

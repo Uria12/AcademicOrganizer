@@ -71,13 +71,13 @@ export const getAssignments = async (req: Request, res: Response) => {
 
 export const updateAssignment = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { status } = req.body;
+  const { title, description, deadline, status } = req.body;
 
   if (!req.user) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  console.log("🔄 Updating assignment:", id, "with status:", status);
+  console.log("🔄 Updating assignment:", id, "with data:", req.body);
 
   try {
     const existing = await prisma.assignment.findUnique({
@@ -88,9 +88,15 @@ export const updateAssignment = async (req: Request, res: Response) => {
       return res.status(403).json({ error: 'Forbidden: Not your assignment' });
     }
 
+    const updateData: any = {};
+    if (title !== undefined) updateData.title = title;
+    if (description !== undefined) updateData.description = description;
+    if (deadline !== undefined) updateData.deadline = new Date(deadline);
+    if (status !== undefined) updateData.status = status;
+
     const updated = await prisma.assignment.update({
       where: { id },
-      data: { status },
+      data: updateData,
     });
 
     console.log("✅ Assignment updated:", updated);
