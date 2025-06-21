@@ -16,7 +16,8 @@
     "format": "prettier --write src/**/*.ts",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "email:test": "ts-node tests/unit/email.service.test.ts"
   },
   "dependencies": {
     "@prisma/client": "^4.16.2",
@@ -30,6 +31,8 @@
     "jsonwebtoken": "^9.0.0",
     "jwt-decode": "^4.0.0",
     "morgan": "^1.10.0",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^6.10.1",
     "zod": "^3.25.67"
   },
   "devDependencies": {
@@ -41,6 +44,8 @@
     "@types/mocha": "^10.0.10",
     "@types/morgan": "^1.9.4",
     "@types/node": "^18.19.112",
+    "@types/node-cron": "^3.0.11",
+    "@types/nodemailer": "^6.4.17",
     "@types/supertest": "^2.0.12",
     "@typescript-eslint/eslint-plugin": "^5.55.0",
     "@typescript-eslint/parser": "^5.55.0",
