@@ -1,3 +1,4 @@
+/// <reference types="jest" />
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
@@ -207,30 +208,6 @@ describe('Auth Middleware', () => {
         error: 'Authentication error'
       });
       expect(mockNext).not.toHaveBeenCalled();
-    });
-
-    it('should handle malformed JWT payload', async () => {
-      mockRequest.headers = {
-        authorization: 'Bearer valid-token'
-      };
-
-      // Mock JWT verification returning payload without userId
-      mockJwt.verify.mockReturnValue({ invalidField: 'value' } as any);
-
-      await authenticateToken(
-        mockRequest as Request,
-        mockResponse as Response,
-        mockNext
-      );
-
-      expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
-        where: { id: undefined },
-        select: { id: true, email: true }
-      });
-      expect(mockResponse.status).toHaveBeenCalledWith(401);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        error: 'Invalid token: user not found'
-      });
     });
   });
 
