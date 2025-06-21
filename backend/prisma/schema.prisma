@@ -20,14 +20,16 @@ model User {
 }
 
 model Assignment {
-  id          String   @id(map: "Assignment_pkey") @default(uuid())
-  title       String
-  description String?
-  deadline    DateTime
-  status      String   @default("pending")
-  createdAt   DateTime @default(now())
-  userId      String
-  users       User     @relation(fields: [userId], references: [id], map: "Assignment_userId_fkey")
+  id                    String   @id(map: "Assignment_pkey") @default(uuid())
+  title                 String
+  description           String?
+  deadline              DateTime
+  status                String   @default("pending")
+  createdAt             DateTime @default(now())
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id], map: "Assignment_userId_fkey")
+  reminderSent          Boolean  @default(false)
+  reminderSentAt        DateTime?
 
   @@map("assignments")
 }
@@ -40,7 +42,7 @@ model Note {
   tag       String?
   createdAt DateTime @default(now())
   userId    String
-  users     User     @relation(fields: [userId], references: [id], map: "Note_userId_fkey")
+  user      User     @relation(fields: [userId], references: [id], map: "Note_userId_fkey")
 
   @@map("notes")
 }
