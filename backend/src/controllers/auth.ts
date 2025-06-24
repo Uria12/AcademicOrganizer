@@ -59,15 +59,15 @@ export const register = async (req: Request, res: Response) => {
     
     // Create new user with password_hash field
     const user = await prisma.user.create({
-      data: { 
-        email, 
-        password_hash: hashedPassword 
-      },
-      select: { 
-        id: true, 
-        email: true, 
-        created_at: true 
-      }
+      data: {
+  email: email,
+  password: hashedPassword,
+},
+      select: {
+  id: true,
+  email: true,
+  createdAt: true,
+}
     });
 
     // Generate JWT token
@@ -105,7 +105,7 @@ export const login = async (req: Request, res: Response) => {
     }
 
     // Verify password against password_hash
-    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+    const isPasswordValid = await bcrypt.compare(password, user.password);
     
     if (!isPasswordValid) {
       console.log('❌ Invalid password for user:', email);
@@ -154,7 +154,7 @@ export const getCurrentUser = async (req: Request, res: Response) => {
       select: { 
         id: true, 
         email: true, 
-        created_at: true 
+        createdAt: true 
       }
     });
 
@@ -166,7 +166,7 @@ export const getCurrentUser = async (req: Request, res: Response) => {
       user: {
         id: currentUser.id,
         email: currentUser.email,
-        createdAt: currentUser.created_at
+        createdAt: currentUser.createdAt
       }
     });
   } catch (error) {
