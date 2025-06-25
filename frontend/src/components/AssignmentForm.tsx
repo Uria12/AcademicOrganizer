@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import apiClient from '../api/client';
 
 // Title: UI/UX Enhancement for AssignmentForm Component
 // Description: Improves usability, accessibility, and feedback for the assignment creation form, including clear titles, inline validation, accessible labels, and a visually distinct submit button.
@@ -42,21 +43,21 @@ const AssignmentForm: React.FC<Props> = ({ onAdd }) => {
     if (Object.keys(validationErrors).length > 0) return;
     setIsSubmitting(true);
     try {
-      const response = await fetch('/api/assignments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(assignment)
-      });
-      if (response.ok) {
+      const response = await apiClient.post('/assignments', assignment);
+      if (response.status === 201) {
         setAssignment({ title: '', deadline: '', description: '' });
         setErrors({});
         onAdd();
       } else {
-        const errorData = await response.json();
+        const errorData = response.data;
         alert('Failed to create assignment: ' + (errorData.error || 'Unknown error'));
       }
-    } catch (error) {
-      alert('Network error. Please try again.');
+    } catch (error: any) {
+      if (error.response && error.response.data && error.response.data.error) {
+        alert('Failed to create assignment: ' + error.response.data.error);
+      } else {
+        alert('Network error. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
