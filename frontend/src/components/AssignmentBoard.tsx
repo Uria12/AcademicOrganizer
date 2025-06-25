@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { DragDropContext, Droppable, Draggable, DropResult, DroppableProvided, DroppableStateSnapshot, DraggableProvided, DraggableStateSnapshot } from 'react-beautiful-dnd';
 
 type Assignment = {
   id: string;
@@ -16,6 +17,12 @@ type Props = {
   onUpdate: (id: string, updatedData: Partial<Assignment>) => void;
 };
 
+const STATUSES = [
+  { key: 'pending', title: '📋 Pending' },
+  { key: 'in-progress', title: '🔄 In Progress' },
+  { key: 'completed', title: '✅ Completed' },
+];
+
 const AssignmentBoard: React.FC<Props> = ({ 
   assignments, 
   error, 
@@ -23,36 +30,51 @@ const AssignmentBoard: React.FC<Props> = ({
   onDelete, 
   onUpdate 
 }) => {
+  console.log('[DEBUG] AssignmentBoard render - assignments received:', assignments);
+  console.log('[DEBUG] AssignmentBoard render - number of assignments:', assignments.length);
+  
   const [editId, setEditId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<Assignment>>({});
 
-  // Group assignments by status
-  const groupedAssignments = {
-    pending: assignments.filter(a => a.status === 'pending' || !a.status),
-    'in-progress': assignments.filter(a => a.status === 'in-progress'),
-    completed: assignments.filter(a => a.status === 'completed')
-  };
+  // Debug: Show all unique status values
+  const uniqueStatuses = [...new Set(assignments.map(a => a.status))];
+  console.log('[DEBUG] Unique status values in assignments:', uniqueStatuses);
+  
+  // Debug: Check if assignments have proper IDs
+  const assignmentIds = assignments.map(a => a.id);
+  console.log('[DEBUG] Assignment IDs:', assignmentIds);
+  console.log('[DEBUG] Assignment statuses:', assignments.map(a => ({ id: a.id, status: a.status })));
+  
+  // Validate assignment structure
+  const validAssignments = assignments.filter(a => a && a.id && typeof a.id === 'string');
+  console.log('[DEBUG] Valid assignments count:', validAssignments.length);
+  console.log('[DEBUG] Invalid assignments:', assignments.filter(a => !a || !a.id || typeof a.id !== 'string'));
 
-  const statusConfig = {
-    pending: {
-      title: '📋 Pending',
-      color: 'bg-yellow-50 border-yellow-200',
-      headerColor: 'bg-yellow-500',
-      cardColor: 'bg-yellow-50 hover:bg-yellow-100'
-    },
-    'in-progress': {
-      title: '🔄 In Progress',
-      color: 'bg-blue-50 border-blue-200',
-      headerColor: 'bg-blue-500',
-      cardColor: 'bg-blue-50 hover:bg-blue-100'
-    },
-    completed: {
-      title: '✅ Completed',
-      color: 'bg-green-50 border-green-200',
-      headerColor: 'bg-green-500',
-      cardColor: 'bg-green-50 hover:bg-green-100'
-    }
+  // Defensive: Ensure all assignments have a valid status
+  const validStatusKeys = STATUSES.map(s => s.key);
+  console.log('[DEBUG] Valid status keys:', validStatusKeys);
+  const assignmentsWithStatus = validAssignments.map(a => ({
+    ...a,
+    status: validStatusKeys.includes(a.status || 'pending') ? (a.status || 'pending') : 'pending',
+  }));
+  console.log('[DEBUG] Assignments with normalized status:', assignmentsWithStatus);
+
+  // Group assignments by status
+  const groupedAssignments: Record<string, Assignment[]> = {
+    pending: assignmentsWithStatus.filter(a => a.status === 'pending'),
+    'in-progress': assignmentsWithStatus.filter(a => a.status === 'in-progress'),
+    completed: assignmentsWithStatus.filter(a => a.status === 'completed'),
   };
+  
+  // Defensive: Collect assignments with unknown status
+  const unknownStatusAssignments = assignmentsWithStatus.filter(a => !validStatusKeys.includes(a.status));
+  if (unknownStatusAssignments.length > 0) {
+    console.warn('[WARNING] Some assignments have unknown status and will not be draggable:', unknownStatusAssignments);
+  }
+
+  console.log('[DEBUG] Grouped assignments:', groupedAssignments);
+  console.log('[DEBUG] Statuses:', STATUSES);
+  console.log('[DEBUG] Droppable keys that will be rendered:', STATUSES.map(s => s.key));
 
   const formatDeadline = (deadline: string) => {
     const date = new Date(deadline);
@@ -74,8 +96,7 @@ const AssignmentBoard: React.FC<Props> = ({
   };
 
   const AssignmentCard = ({ assignment }: { assignment: Assignment }) => (
-    <div className={`${statusConfig[assignment.status as keyof typeof statusConfig]?.cardColor || 'bg-gray-50'} 
-      border border-gray-200 rounded-lg p-4 mb-3 shadow-sm transition-all duration-200 hover:shadow-md cursor-pointer`}>
+    <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md relative">
       {editId === assignment.id ? (
         <div className="space-y-3">
           <input
@@ -172,6 +193,41 @@ const AssignmentBoard: React.FC<Props> = ({
     </div>
   );
 
+  // Debug: Log assignments on drag start/end
+  const onDragStart = (result: any) => {
+    console.log('[DEBUG] Drag started:', result);
+    console.log('[DEBUG] Assignments at drag start:', assignmentsWithStatus);
+    console.log('[DEBUG] Droppable keys at drag start:', STATUSES.map(s => s.key));
+    console.log('[DEBUG] Grouped assignments at drag start:', groupedAssignments);
+  };
+
+  const onDragUpdate = (result: any) => {
+    console.log('[DEBUG] Drag update:', result);
+  };
+
+  const onDragEnd = (result: DropResult) => {
+    console.log('[DEBUG] Drag ended:', result);
+    console.log('[DEBUG] Assignments at drag end:', assignmentsWithStatus);
+    const { source, destination, draggableId } = result;
+    if (!destination) {
+      console.log('[DEBUG] No destination, drag cancelled');
+      return;
+    }
+    const sourceStatus = source.droppableId;
+    const destStatus = destination.droppableId;
+    console.log('[DEBUG] Source status:', sourceStatus, 'Destination status:', destStatus);
+    console.log('[DEBUG] Draggable ID:', draggableId);
+    if (sourceStatus !== destStatus) {
+      console.log('[DEBUG] Status changed from', sourceStatus, 'to', destStatus);
+      console.log('[DEBUG] Calling onStatusChange with:', draggableId, destStatus);
+      onStatusChange(draggableId, destStatus);
+    } else {
+      console.log('[DEBUG] Same status, no change needed');
+    }
+  };
+
+  console.log('[DEBUG] About to render DragDropContext with droppables:', STATUSES.map(s => s.key));
+  
   return (
     <div className="mt-6">
       {error && (
@@ -180,40 +236,70 @@ const AssignmentBoard: React.FC<Props> = ({
         </div>
       )}
       
-      {/* Mobile: Single column, Desktop: Three columns */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-        {Object.entries(groupedAssignments).map(([status, statusAssignments]) => (
-          <div key={status} className="flex flex-col">
-            <div className={`${statusConfig[status as keyof typeof statusConfig]?.headerColor} 
-              text-white px-4 py-3 rounded-t-lg shadow-sm`}>
-              <div className="flex justify-between items-center">
-                <h2 className="font-semibold text-sm">
-                  {statusConfig[status as keyof typeof statusConfig]?.title}
-                </h2>
-                <span className="bg-white bg-opacity-20 rounded-full px-2 py-1 text-xs font-medium">
-                  {statusAssignments.length}
-                </span>
-              </div>
-            </div>
-            
-            <div className={`${statusConfig[status as keyof typeof statusConfig]?.color} 
-              border border-gray-200 rounded-b-lg p-3 lg:p-4 min-h-[300px] lg:min-h-[400px] shadow-sm flex-1`}>
-              {statusAssignments.length === 0 ? (
-                <div className="text-center text-gray-500 text-sm py-8">
-                  <div className="text-2xl mb-2">📭</div>
-                  No assignments in this status
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {statusAssignments.map((assignment) => (
-                    <AssignmentCard key={assignment.id} assignment={assignment} />
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
+      {/* Show loading state if no assignments yet */}
+      {assignments.length === 0 && !error && (
+        <div className="text-center py-12">
+          <div className="text-2xl mb-4">📋</div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Loading assignments...</h3>
+          <p className="text-gray-600">Please wait while we load your assignments.</p>
+        </div>
+      )}
+      
+      <DragDropContext onDragEnd={onDragEnd} onDragStart={onDragStart} onDragUpdate={onDragUpdate}>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+          {STATUSES.map(({ key, title }) => {
+            console.log(`[DEBUG] Rendering Droppable for key: ${key}, title: ${title}`);
+            return (
+              <Droppable droppableId={key} key={key}>
+                {(provided: DroppableProvided, snapshot: DroppableStateSnapshot) => {
+                  console.log(`[DEBUG] Droppable render for ${key}:`, { isDraggingOver: snapshot.isDraggingOver, draggingFromThisWith: snapshot.draggingFromThisWith });
+                  return (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      className={`droppable-zone flex flex-col min-h-[300px] lg:min-h-[400px] bg-white border rounded-lg shadow-sm p-3 lg:p-4 ${snapshot.isDraggingOver ? 'dragging-over' : ''}`}
+                    >
+                      <div className="font-semibold text-sm mb-2">{title} <span className="ml-2 text-xs text-gray-400">{groupedAssignments[key]?.length || 0}</span></div>
+                      
+                      <div className="space-y-3 flex-1">
+                        {groupedAssignments[key] && groupedAssignments[key].length > 0 ? (
+                          groupedAssignments[key].map((assignment, idx) => {
+                            console.log(`[DEBUG] Rendering Draggable for assignment:`, assignment.id, 'in status:', key, 'at index:', idx);
+                            return (
+                              <Draggable draggableId={assignment.id} index={idx} key={assignment.id}>
+                                {(provided: DraggableProvided, snapshot: DraggableStateSnapshot) => {
+                                  console.log(`[DEBUG] Draggable render for ${assignment.id}:`, { isDragging: snapshot.isDragging, isDropAnimating: snapshot.isDropAnimating });
+                                  return (
+                                    <div
+                                      ref={provided.innerRef}
+                                      {...provided.draggableProps}
+                                      {...provided.dragHandleProps}
+                                      className={`draggable-item ${snapshot.isDragging ? 'bg-blue-100 shadow-lg' : ''}`}
+                                      style={provided.draggableProps.style}
+                                    >
+                                      <AssignmentCard assignment={assignment} />
+                                    </div>
+                                  );
+                                }}
+                              </Draggable>
+                            );
+                          })
+                        ) : (
+                          <div className="text-center text-gray-500 text-sm py-8">
+                            <div className="text-2xl mb-2">📭</div>
+                            {assignments.length === 0 ? 'No assignments yet' : 'No assignments in this status'}
+                          </div>
+                        )}
+                        {provided.placeholder}
+                      </div>
+                    </div>
+                  );
+                }}
+              </Droppable>
+            );
+          })}
+        </div>
+      </DragDropContext>
     </div>
   );
 };

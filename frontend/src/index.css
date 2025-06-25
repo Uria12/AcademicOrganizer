@@ -60,6 +60,40 @@ body {
   .glass-effect {
     @apply bg-white/80 backdrop-blur-md border border-white/20;
   }
+  
+  /* Drag and drop improvements */
+  .draggable-item {
+    @apply cursor-grab active:cursor-grabbing;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    position: relative;
+  }
+  
+  .draggable-item:active {
+    cursor: grabbing !important;
+  }
+  
+  /* Ensure react-beautiful-dnd positioning works correctly */
+  [data-rbd-draggable-context-id] {
+    /* Let react-beautiful-dnd handle all positioning */
+    position: relative !important;
+  }
+  
+  /* Fix cursor alignment during drag */
+  [data-rbd-draggable-context-id][style*="transform"] {
+    transform-origin: 0 0 !important;
+  }
+  
+  /* Smooth transitions for drag states */
+  .droppable-zone {
+    @apply transition-all duration-200 ease-in-out;
+  }
+  
+  .droppable-zone.dragging-over {
+    @apply bg-blue-50 border-blue-300;
+  }
 }
 
 .dark input,

@@ -21,7 +21,7 @@ import {
   Award
 } from 'lucide-react';
 import AssignmentForm from '../components/AssignmentForm';
-import AssignmentList from '../components/AssignmentList';
+import AssignmentBoard from '../components/AssignmentBoard';
 import { Assignment } from '../App';
 import Logo from '../components/Logo';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -49,6 +49,9 @@ const Dashboard: React.FC<DashboardProps> = ({
   user,
   onUpdate
 }) => {
+  console.log('[DEBUG] Dashboard render - assignments count:', assignments.length);
+  console.log('[DEBUG] Dashboard render - assignments:', assignments);
+  
   const [filter, setFilter] = useState('all');
   const [sort, setSort] = useState<'asc' | 'desc'>('asc');
   const [searchTerm, setSearchTerm] = useState('');
@@ -60,7 +63,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const stats = useMemo(() => {
     const total = assignments.length;
     const completed = assignments.filter(a => a.status === 'completed').length;
-    const pending = assignments.filter(a => a.status === 'pending').length;
+    const pending = assignments.filter(a => a.status === 'pending' || !a.status).length;
     const inProgress = assignments.filter(a => a.status === 'in-progress').length;
     const overdue = assignments.filter(a => {
       const deadline = new Date(a.deadline);
@@ -120,7 +123,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
       </div>
 
       {/* Header */}
@@ -423,8 +426,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                     <motion.button
                       onClick={() => setShowAssignmentForm(!showAssignmentForm)}
                       className="btn-primary flex items-center space-x-2"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
                     >
                       <Plus className="w-5 h-5" />
                       <span>Add Assignment</span>
@@ -446,48 +447,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     )}
                   </AnimatePresence>
 
-                  {/* Filter and Sort Controls */}
-                  <div className="card p-6">
-                    <div className="flex flex-wrap gap-4 items-center">
-                      <div className="flex items-center space-x-2">
-                        <Filter className="w-5 h-5 text-secondary-400" />
-                        <label className="text-sm font-medium text-secondary-700">Filter:</label>
-                        <select
-                          value={filter}
-                          onChange={(e) => setFilter(e.target.value)}
-                          className="input-field py-2 px-3 text-sm min-w-[140px]"
-                        >
-                          <option value="all">All Assignments</option>
-                          <option value="pending">Pending</option>
-                          <option value="in-progress">In Progress</option>
-                          <option value="completed">Completed</option>
-                        </select>
-                      </div>
-
-                      <div className="flex items-center space-x-2">
-                        {sort === 'asc' ? (
-                          <SortAsc className="w-5 h-5 text-secondary-400" />
-                        ) : (
-                          <SortDesc className="w-5 h-5 text-secondary-400" />
-                        )}
-                        <label className="text-sm font-medium text-secondary-700">Sort:</label>
-                        <select
-                          value={sort}
-                          onChange={(e) => setSort(e.target.value as 'asc' | 'desc')}
-                          className="input-field py-2 px-3 text-sm min-w-[140px]"
-                        >
-                          <option value="asc">Earliest First</option>
-                          <option value="desc">Latest First</option>
-                        </select>
-                      </div>
-
-                      <div className="ml-auto text-sm text-secondary-600">
-                        {filteredAssignments.length} assignment{filteredAssignments.length !== 1 ? 's' : ''}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Assignment List */}
+                  {/* Assignment Board */}
                   <div className="card p-6">
                     {loading ? (
                       <div className="flex justify-center items-center py-12">
@@ -495,30 +455,34 @@ const Dashboard: React.FC<DashboardProps> = ({
                       </div>
                     ) : error ? (
                       <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
                         className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg"
                       >
                         <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
                         <p className="text-red-800">{error}</p>
                       </motion.div>
-                    ) : filteredAssignments.length === 0 ? (
+                    ) : assignments.length === 0 ? (
                       <div className="text-center py-12">
                         <Target className="w-16 h-16 text-secondary-300 mx-auto mb-4" />
                         <h3 className="text-lg font-medium text-secondary-900 mb-2">No assignments found</h3>
                         <p className="text-secondary-600">
-                          {searchTerm ? 'Try adjusting your search terms.' : 'Get started by adding your first assignment.'}
+                          Get started by adding your first assignment.
                         </p>
                       </div>
                     ) : (
-                      <AssignmentList
-                        assignments={filteredAssignments}
-                        onStatusChange={onStatusChange}
-                        onDelete={onDelete}
-                        error={null}
-                        filter={''}
-                        onUpdate={onUpdate}
-                      />
+                      (() => {
+                        console.log('[DEBUG] Dashboard rendering AssignmentBoard with assignments:', assignments);
+                        return (
+                          <AssignmentBoard
+                            assignments={assignments}
+                            onStatusChange={onStatusChange}
+                            onDelete={onDelete}
+                            error={null}
+                            onUpdate={onUpdate}
+                          />
+                        );
+                      })()
                     )}
                   </div>
                 </motion.div>
