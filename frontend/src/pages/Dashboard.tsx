@@ -35,6 +35,7 @@ interface DashboardProps {
   fetchAssignments: () => void;
   logout: () => void;
   user?: { email: string };
+  onUpdate: (id: string, updatedData: Partial<Assignment>) => void;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({
@@ -45,7 +46,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   onDelete,
   fetchAssignments,
   logout,
-  user
+  user,
+  onUpdate
 }) => {
   const [filter, setFilter] = useState('all');
   const [sort, setSort] = useState<'asc' | 'desc'>('asc');
@@ -515,9 +517,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         onDelete={onDelete}
                         error={null}
                         filter={''}
-                        onUpdate={function (id: string, updatedData: Partial<{ id: string; title: string; deadline: string; description?: string; status?: string; }>): void {
-                          throw new Error('Function not implemented.');
-                        }}
+                        onUpdate={onUpdate}
                       />
                     )}
                   </div>
