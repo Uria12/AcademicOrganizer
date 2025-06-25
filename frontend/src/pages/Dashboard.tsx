@@ -54,7 +54,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [showSidebar, setShowSidebar] = useState(false);
   const [showAssignmentForm, setShowAssignmentForm] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'assignments'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'assignments'>('assignments');
 
   // Calculate dashboard statistics
   const stats = useMemo(() => {
@@ -455,7 +455,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         <select
                           value={filter}
                           onChange={(e) => setFilter(e.target.value)}
-                          className="input-field py-2 px-3 text-sm"
+                          className="input-field py-2 px-3 text-sm min-w-[140px]"
                         >
                           <option value="all">All Assignments</option>
                           <option value="pending">Pending</option>
@@ -474,7 +474,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         <select
                           value={sort}
                           onChange={(e) => setSort(e.target.value as 'asc' | 'desc')}
-                          className="input-field py-2 px-3 text-sm"
+                          className="input-field py-2 px-3 text-sm min-w-[140px]"
                         >
                           <option value="asc">Earliest First</option>
                           <option value="desc">Latest First</option>
