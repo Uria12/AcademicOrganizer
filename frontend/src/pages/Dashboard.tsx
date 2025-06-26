@@ -57,7 +57,12 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [showSidebar, setShowSidebar] = useState(false);
   const [showAssignmentForm, setShowAssignmentForm] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'assignments'>('assignments');
+  const [activeTab, setActiveTab] = useState<'overview' | 'assignments' | 'settings'>('assignments');
+  const [reminderDays, setReminderDays] = useState<number>(() => {
+    const stored = localStorage.getItem('reminderDays');
+    return stored ? parseInt(stored, 10) : 1;
+  });
+  const [reminderSaveMsg, setReminderSaveMsg] = useState<string>('');
 
   // Calculate dashboard statistics
   const stats = useMemo(() => {
@@ -235,6 +240,18 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <Target className="w-5 h-5" />
                 <span className="font-medium">Assignments</span>
               </button>
+
+              <button
+                onClick={() => setActiveTab('settings')}
+                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                  activeTab === 'settings'
+                    ? 'bg-primary-100 text-primary-700 border border-primary-200'
+                    : 'text-secondary-600 hover:bg-white/50'
+                }`}
+              >
+                <Target className="w-5 h-5" />
+                <span className="font-medium">Settings</span>
+              </button>
             </nav>
 
             {/* Sidebar Footer */}
@@ -268,6 +285,46 @@ const Dashboard: React.FC<DashboardProps> = ({
                 />
               </div>
             </div>
+
+            <div className="flex space-x-4 mb-6">
+              <button
+                className={`px-4 py-2 rounded ${activeTab === 'assignments' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+                onClick={() => setActiveTab('assignments')}
+              >Assignments</button>
+              <button
+                className={`px-4 py-2 rounded ${activeTab === 'overview' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+                onClick={() => setActiveTab('overview')}
+              >Overview</button>
+              <button
+                className={`px-4 py-2 rounded ${activeTab === 'settings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+                onClick={() => setActiveTab('settings')}
+              >Settings</button>
+            </div>
+
+            {activeTab === 'settings' && (
+              <div className="max-w-md mx-auto bg-white p-6 rounded shadow">
+                <h2 className="text-xl font-bold mb-2">Reminder Settings</h2>
+                <label className="block mb-2 font-medium">Days before deadline to receive reminder:</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={7}
+                  value={reminderDays}
+                  onChange={e => setReminderDays(Math.max(1, Math.min(7, parseInt(e.target.value) || 1)))}
+                  className="border rounded px-3 py-2 w-20 mb-4"
+                />
+                <button
+                  className="ml-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  onClick={() => {
+                    localStorage.setItem('reminderDays', reminderDays.toString());
+                    setReminderSaveMsg('Saved!');
+                    setTimeout(() => setReminderSaveMsg(''), 2000);
+                  }}
+                >Save</button>
+                {reminderSaveMsg && <span className="ml-4 text-green-600">{reminderSaveMsg}</span>}
+                <p className="mt-4 text-gray-500 text-sm">You will receive an email reminder this many days before each assignment deadline.</p>
+              </div>
+            )}
 
             <AnimatePresence mode="wait">
               {activeTab === 'overview' ? (
