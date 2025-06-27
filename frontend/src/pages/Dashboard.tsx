@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Bell, 
@@ -25,6 +25,9 @@ import AssignmentList from '../components/AssignmentList';
 import { Assignment } from '../App';
 import Logo from '../components/Logo';
 import LoadingSpinner from '../components/LoadingSpinner';
+import NoteForm from '../components/NoteForm';
+import NoteList from '../components/NoteList';
+import apiClient from '../api/client';
 
 interface DashboardProps {
   assignments: Assignment[];
@@ -35,6 +38,16 @@ interface DashboardProps {
   fetchAssignments: () => void;
   logout: () => void;
   user?: { email: string };
+}
+
+// Note type
+interface Note {
+  id: string;
+  title: string;
+  content: string;
+  link?: string;
+  tag?: string;
+  createdAt: string;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({
@@ -53,6 +66,10 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [showSidebar, setShowSidebar] = useState(false);
   const [showAssignmentForm, setShowAssignmentForm] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'assignments'>('overview');
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [notesLoading, setNotesLoading] = useState(false);
+  const [notesError, setNotesError] = useState<string | null>(null);
+  const [noteFilter, setNoteFilter] = useState('all');
 
   // Calculate dashboard statistics
   const stats = useMemo(() => {
@@ -111,6 +128,50 @@ const Dashboard: React.FC<DashboardProps> = ({
       .sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime())
       .slice(0, 5);
   }, [assignments]);
+
+  // Fetch notes from backend
+  const fetchNotes = async () => {
+    setNotesLoading(true);
+    setNotesError(null);
+    try {
+      const response = await apiClient.get('/notes');
+      setNotes(response.data);
+    } catch (err: any) {
+      setNotesError(err.response?.data?.error || 'Failed to fetch notes');
+    } finally {
+      setNotesLoading(false);
+    }
+  };
+
+  // Add note handler
+  const handleAddNote = () => {
+    fetchNotes();
+  };
+
+  // Update note handler
+  const handleUpdateNote = async (id: string, updatedData: Partial<Note>) => {
+    try {
+      await apiClient.put(`/notes/${id}`, updatedData);
+      fetchNotes();
+    } catch (err: any) {
+      setNotesError(err.response?.data?.error || 'Failed to update note');
+    }
+  };
+
+  // Delete note handler
+  const handleDeleteNote = async (id: string) => {
+    try {
+      await apiClient.delete(`/notes/${id}`);
+      setNotes(notes.filter(note => note.id !== id));
+    } catch (err: any) {
+      setNotesError(err.response?.data?.error || 'Failed to delete note');
+    }
+  };
+
+  // Fetch notes on mount
+  useEffect(() => {
+    fetchNotes();
+  }, []);
 
   return (
     <div className="min-h-screen gradient-bg">
@@ -521,6 +582,23 @@ const Dashboard: React.FC<DashboardProps> = ({
                       />
                     )}
                   </div>
+
+                  {/* Notes Section */}
+                  <section className="mt-12">
+                    <h2 className="text-2xl font-bold mb-4">Notes</h2>
+                    <NoteForm onAdd={handleAddNote} />
+                    {notesLoading ? (
+                      <LoadingSpinner />
+                    ) : (
+                      <NoteList
+                        notes={notes}
+                        error={notesError}
+                        filter={noteFilter}
+                        onDelete={handleDeleteNote}
+                        onUpdate={handleUpdateNote}
+                      />
+                    )}
+                  </section>
                 </motion.div>
               )}
             </AnimatePresence>
