@@ -21,20 +21,15 @@ const AssignmentList: React.FC<Props> = ({ assignments, error, filter, onStatusC
   const [editId, setEditId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<Assignment>>({});
 
-  // Filter assignments based on selected status (all, pending, in-progress, completed)
-  const filtered = filter === 'all'
-    ? assignments
-    : assignments.filter((a) => a.status === filter);
-
   return (
     <div className="mt-8">
       <h2 className="text-xl font-semibold mb-4">My Assignments</h2>
       {error && <p className="text-red-600">{error}</p>}
-      {filtered.length === 0 ? (
+      {assignments.length === 0 ? (
         <p className="text-gray-600 italic">No assignments match the selected filter.</p>
       ) : (
         <ul className="space-y-3">
-          {filtered.map((assignment) => (
+          {assignments.map((assignment) => (
             <li key={assignment.id} className="border p-3 rounded shadow">
               {editId === assignment.id ? (
                 <div className="space-y-2">

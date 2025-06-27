@@ -17,7 +17,8 @@ const AuthWrapper = () => (
 );
 
 root.render(
-  <React.StrictMode>
+  // Disabled StrictMode to fix react-beautiful-dnd drag and drop issues
+  // <React.StrictMode>
     <AuthWrapper />
-  </React.StrictMode>
+  // </React.StrictMode>
 );

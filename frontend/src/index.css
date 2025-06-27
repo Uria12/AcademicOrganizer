@@ -3,6 +3,29 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Enable dark mode via class */
+html.dark body {
+  @apply bg-gray-900 text-gray-100;
+}
+
+body {
+  @apply transition-colors duration-300;
+}
+
+/* Example: override backgrounds for dark mode */
+.dark .bg-white {
+  @apply bg-gray-800 !important;
+}
+.dark .text-gray-900 {
+  @apply text-gray-100 !important;
+}
+.dark .bg-gray-50 {
+  @apply bg-gray-900 !important;
+}
+.dark .text-gray-600 {
+  @apply text-gray-300 !important;
+}
+
 @layer base {
   html {
     font-family: 'Inter', system-ui, sans-serif;
@@ -37,4 +60,78 @@
   .glass-effect {
     @apply bg-white/80 backdrop-blur-md border border-white/20;
   }
+  
+  /* Drag and drop improvements */
+  .draggable-item {
+    @apply cursor-grab active:cursor-grabbing;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    position: relative;
+  }
+  
+  .draggable-item:active {
+    cursor: grabbing !important;
+  }
+  
+  /* Ensure react-beautiful-dnd positioning works correctly */
+  [data-rbd-draggable-context-id] {
+    /* Let react-beautiful-dnd handle all positioning */
+    position: relative !important;
+  }
+  
+  /* Fix cursor alignment during drag */
+  [data-rbd-draggable-context-id][style*="transform"] {
+    transform-origin: 0 0 !important;
+  }
+  
+  /* Smooth transitions for drag states */
+  .droppable-zone {
+    @apply transition-all duration-200 ease-in-out;
+  }
+  
+  .droppable-zone.dragging-over {
+    @apply bg-blue-50 border-blue-300;
+  }
+}
+
+.dark input,
+.dark textarea,
+.dark select {
+  @apply bg-gray-800 text-gray-100 border-gray-700 placeholder-gray-400;
+}
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+  @apply border-blue-500;
+}
+.dark .border-gray-300 {
+  @apply border-gray-700 !important;
+}
+.dark .bg-white\/80 {
+  @apply bg-gray-800/80 !important;
+}
+.dark .bg-white\/50 {
+  @apply bg-gray-800/50 !important;
+}
+.dark .bg-white {
+  @apply bg-gray-800 !important;
+}
+.dark .shadow-md {
+  @apply shadow-lg shadow-black/30;
+}
+
+.dark .input-field {
+  @apply bg-gray-800 text-gray-100 border-gray-700 placeholder-gray-400 !important;
+}
+.dark .input-field:focus {
+  @apply border-blue-500 !important;
+}
+
+.dark .gradient-bg {
+  background: linear-gradient(135deg, #232946 0%, #121629 100%) !important;
+}
+.dark .card {
+  @apply bg-gray-900 border-gray-800 shadow-2xl !important;
 }

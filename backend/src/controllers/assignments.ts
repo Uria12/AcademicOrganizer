@@ -11,7 +11,7 @@ export const createAssignment = async (req: Request, res: Response) => {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const { title, description, deadline } = req.body;
+  const { title, description, deadline, status } = req.body;
   const userId = req.user.id; // Extract authenticated user id from jwt middleware
   
  // Validate required fields before database operation
@@ -34,6 +34,7 @@ export const createAssignment = async (req: Request, res: Response) => {
         description: description || '',
         deadline: new Date(deadline), // Convert string deadline to Date object for PostgreSQL storage
         userId,
+        status: status || 'pending',
       },
     });
     
