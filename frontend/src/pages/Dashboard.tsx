@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Bell, 
@@ -21,10 +21,13 @@ import {
   Award
 } from 'lucide-react';
 import AssignmentForm from '../components/AssignmentForm';
-import AssignmentBoard from '../components/AssignmentBoard';
+import AssignmentList from '../components/AssignmentList';
 import { Assignment } from '../App';
 import Logo from '../components/Logo';
 import LoadingSpinner from '../components/LoadingSpinner';
+import NoteForm from '../components/NoteForm';
+import NoteList from '../components/NoteList';
+import apiClient from '../api/client';
 
 interface DashboardProps {
   assignments: Assignment[];
@@ -35,7 +38,16 @@ interface DashboardProps {
   fetchAssignments: () => void;
   logout: () => void;
   user?: { email: string };
-  onUpdate: (id: string, updatedData: Partial<Assignment>) => void;
+}
+
+// Note type
+interface Note {
+  id: string;
+  title: string;
+  content: string;
+  link?: string;
+  tag?: string;
+  createdAt: string;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({
@@ -46,29 +58,24 @@ const Dashboard: React.FC<DashboardProps> = ({
   onDelete,
   fetchAssignments,
   logout,
-  user,
-  onUpdate
+  user
 }) => {
-  console.log('[DEBUG] Dashboard render - assignments count:', assignments.length);
-  console.log('[DEBUG] Dashboard render - assignments:', assignments);
-  
   const [filter, setFilter] = useState('all');
   const [sort, setSort] = useState<'asc' | 'desc'>('asc');
   const [searchTerm, setSearchTerm] = useState('');
   const [showSidebar, setShowSidebar] = useState(false);
   const [showAssignmentForm, setShowAssignmentForm] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'assignments' | 'settings'>('assignments');
-  const [reminderDays, setReminderDays] = useState<number>(() => {
-    const stored = localStorage.getItem('reminderDays');
-    return stored ? parseInt(stored, 10) : 1;
-  });
-  const [reminderSaveMsg, setReminderSaveMsg] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<'overview' | 'assignments'>('overview');
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [notesLoading, setNotesLoading] = useState(false);
+  const [notesError, setNotesError] = useState<string | null>(null);
+  const [noteFilter, setNoteFilter] = useState('all');
 
   // Calculate dashboard statistics
   const stats = useMemo(() => {
     const total = assignments.length;
     const completed = assignments.filter(a => a.status === 'completed').length;
-    const pending = assignments.filter(a => a.status === 'pending' || !a.status).length;
+    const pending = assignments.filter(a => a.status === 'pending').length;
     const inProgress = assignments.filter(a => a.status === 'in-progress').length;
     const overdue = assignments.filter(a => {
       const deadline = new Date(a.deadline);
@@ -122,13 +129,57 @@ const Dashboard: React.FC<DashboardProps> = ({
       .slice(0, 5);
   }, [assignments]);
 
+  // Fetch notes from backend
+  const fetchNotes = async () => {
+    setNotesLoading(true);
+    setNotesError(null);
+    try {
+      const response = await apiClient.get('/notes');
+      setNotes(response.data);
+    } catch (err: any) {
+      setNotesError(err.response?.data?.error || 'Failed to fetch notes');
+    } finally {
+      setNotesLoading(false);
+    }
+  };
+
+  // Add note handler
+  const handleAddNote = () => {
+    fetchNotes();
+  };
+
+  // Update note handler
+  const handleUpdateNote = async (id: string, updatedData: Partial<Note>) => {
+    try {
+      await apiClient.put(`/notes/${id}`, updatedData);
+      fetchNotes();
+    } catch (err: any) {
+      setNotesError(err.response?.data?.error || 'Failed to update note');
+    }
+  };
+
+  // Delete note handler
+  const handleDeleteNote = async (id: string) => {
+    try {
+      await apiClient.delete(`/notes/${id}`);
+      setNotes(notes.filter(note => note.id !== id));
+    } catch (err: any) {
+      setNotesError(err.response?.data?.error || 'Failed to delete note');
+    }
+  };
+
+  // Fetch notes on mount
+  useEffect(() => {
+    fetchNotes();
+  }, []);
+
   return (
     <div className="min-h-screen gradient-bg">
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
       </div>
 
       {/* Header */}
@@ -240,18 +291,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <Target className="w-5 h-5" />
                 <span className="font-medium">Assignments</span>
               </button>
-
-              <button
-                onClick={() => setActiveTab('settings')}
-                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                  activeTab === 'settings'
-                    ? 'bg-primary-100 text-primary-700 border border-primary-200'
-                    : 'text-secondary-600 hover:bg-white/50'
-                }`}
-              >
-                <Target className="w-5 h-5" />
-                <span className="font-medium">Settings</span>
-              </button>
             </nav>
 
             {/* Sidebar Footer */}
@@ -285,46 +324,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                 />
               </div>
             </div>
-
-            <div className="flex space-x-4 mb-6">
-              <button
-                className={`px-4 py-2 rounded ${activeTab === 'assignments' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
-                onClick={() => setActiveTab('assignments')}
-              >Assignments</button>
-              <button
-                className={`px-4 py-2 rounded ${activeTab === 'overview' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
-                onClick={() => setActiveTab('overview')}
-              >Overview</button>
-              <button
-                className={`px-4 py-2 rounded ${activeTab === 'settings' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
-                onClick={() => setActiveTab('settings')}
-              >Settings</button>
-            </div>
-
-            {activeTab === 'settings' && (
-              <div className="max-w-md mx-auto bg-white p-6 rounded shadow">
-                <h2 className="text-xl font-bold mb-2">Reminder Settings</h2>
-                <label className="block mb-2 font-medium">Days before deadline to receive reminder:</label>
-                <input
-                  type="number"
-                  min={1}
-                  max={7}
-                  value={reminderDays}
-                  onChange={e => setReminderDays(Math.max(1, Math.min(7, parseInt(e.target.value) || 1)))}
-                  className="border rounded px-3 py-2 w-20 mb-4"
-                />
-                <button
-                  className="ml-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                  onClick={() => {
-                    localStorage.setItem('reminderDays', reminderDays.toString());
-                    setReminderSaveMsg('Saved!');
-                    setTimeout(() => setReminderSaveMsg(''), 2000);
-                  }}
-                >Save</button>
-                {reminderSaveMsg && <span className="ml-4 text-green-600">{reminderSaveMsg}</span>}
-                <p className="mt-4 text-gray-500 text-sm">You will receive an email reminder this many days before each assignment deadline.</p>
-              </div>
-            )}
 
             <AnimatePresence mode="wait">
               {activeTab === 'overview' ? (
@@ -483,6 +482,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                     <motion.button
                       onClick={() => setShowAssignmentForm(!showAssignmentForm)}
                       className="btn-primary flex items-center space-x-2"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                     >
                       <Plus className="w-5 h-5" />
                       <span>Add Assignment</span>
@@ -504,7 +505,48 @@ const Dashboard: React.FC<DashboardProps> = ({
                     )}
                   </AnimatePresence>
 
-                  {/* Assignment Board */}
+                  {/* Filter and Sort Controls */}
+                  <div className="card p-6">
+                    <div className="flex flex-wrap gap-4 items-center">
+                      <div className="flex items-center space-x-2">
+                        <Filter className="w-5 h-5 text-secondary-400" />
+                        <label className="text-sm font-medium text-secondary-700">Filter:</label>
+                        <select
+                          value={filter}
+                          onChange={(e) => setFilter(e.target.value)}
+                          className="input-field py-2 px-3 text-sm"
+                        >
+                          <option value="all">All Assignments</option>
+                          <option value="pending">Pending</option>
+                          <option value="in-progress">In Progress</option>
+                          <option value="completed">Completed</option>
+                        </select>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        {sort === 'asc' ? (
+                          <SortAsc className="w-5 h-5 text-secondary-400" />
+                        ) : (
+                          <SortDesc className="w-5 h-5 text-secondary-400" />
+                        )}
+                        <label className="text-sm font-medium text-secondary-700">Sort:</label>
+                        <select
+                          value={sort}
+                          onChange={(e) => setSort(e.target.value as 'asc' | 'desc')}
+                          className="input-field py-2 px-3 text-sm"
+                        >
+                          <option value="asc">Earliest First</option>
+                          <option value="desc">Latest First</option>
+                        </select>
+                      </div>
+
+                      <div className="ml-auto text-sm text-secondary-600">
+                        {filteredAssignments.length} assignment{filteredAssignments.length !== 1 ? 's' : ''}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Assignment List */}
                   <div className="card p-6">
                     {loading ? (
                       <div className="flex justify-center items-center py-12">
@@ -512,36 +554,51 @@ const Dashboard: React.FC<DashboardProps> = ({
                       </div>
                     ) : error ? (
                       <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
                         className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg"
                       >
                         <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
                         <p className="text-red-800">{error}</p>
                       </motion.div>
-                    ) : assignments.length === 0 ? (
+                    ) : filteredAssignments.length === 0 ? (
                       <div className="text-center py-12">
                         <Target className="w-16 h-16 text-secondary-300 mx-auto mb-4" />
                         <h3 className="text-lg font-medium text-secondary-900 mb-2">No assignments found</h3>
                         <p className="text-secondary-600">
-                          Get started by adding your first assignment.
+                          {searchTerm ? 'Try adjusting your search terms.' : 'Get started by adding your first assignment.'}
                         </p>
                       </div>
                     ) : (
-                      (() => {
-                        console.log('[DEBUG] Dashboard rendering AssignmentBoard with assignments:', assignments);
-                        return (
-                          <AssignmentBoard
-                            assignments={assignments}
-                            onStatusChange={onStatusChange}
-                            onDelete={onDelete}
-                            error={null}
-                            onUpdate={onUpdate}
-                          />
-                        );
-                      })()
+                      <AssignmentList
+                        assignments={filteredAssignments}
+                        onStatusChange={onStatusChange}
+                        onDelete={onDelete}
+                        error={null}
+                        filter={''}
+                        onUpdate={function (id: string, updatedData: Partial<{ id: string; title: string; deadline: string; description?: string; status?: string; }>): void {
+                          throw new Error('Function not implemented.');
+                        }}
+                      />
                     )}
                   </div>
+
+                  {/* Notes Section */}
+                  <section className="mt-12">
+                    <h2 className="text-2xl font-bold mb-4">Notes</h2>
+                    <NoteForm onAdd={handleAddNote} />
+                    {notesLoading ? (
+                      <LoadingSpinner />
+                    ) : (
+                      <NoteList
+                        notes={notes}
+                        error={notesError}
+                        filter={noteFilter}
+                        onDelete={handleDeleteNote}
+                        onUpdate={handleUpdateNote}
+                      />
+                    )}
+                  </section>
                 </motion.div>
               )}
             </AnimatePresence>
