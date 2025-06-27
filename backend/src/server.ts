@@ -18,6 +18,12 @@ import authRoutes from './routes/auth';
 import assignmentRoutes from './routes/assignments';
 import noteRoutes from './routes/notes';
 import { authenticateToken } from './middleware/auth';
+import { 
+  securityHeaders, 
+  apiRateLimit, 
+  sanitizeInput, 
+  requestSizeLimit 
+} from './middleware/security';
 import scheduler from './services/scheduler';
 import emailService from './services/emailService';
 
@@ -25,12 +31,20 @@ const prisma = new PrismaClient();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(express.json());
+// Security middleware (apply first)
+app.use(securityHeaders);
+app.use(requestSizeLimit);
+app.use(sanitizeInput);
+
+// Basic middleware
+app.use(express.json({ limit: '1mb' }));
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true
 }));
+
+// Rate limiting
+app.use('/api/', apiRateLimit);
 
 // Request logging middleware
 app.use((req, res, next) => {
